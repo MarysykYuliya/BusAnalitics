@@ -1,0 +1,245 @@
+@model IEnumerable<BusinessAnalytics.Models.Entities.Transaction>
+
+@{
+    ViewData["Title"] = "Транзакції";
+    var businesses = ViewBag.Businesses as List<BusinessAnalytics.Models.Entities.BusinessAccount>;
+    var selectedBusinessId = ViewBag.SelectedBusinessId as Guid?;
+    var startDate = ViewBag.StartDate;
+    var endDate = ViewBag.EndDate;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+}
+
+<style>
+    .page-link-custom {
+        background: rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: var(--text-muted) !important;
+        transition: all 0.3s;
+    }
+    .page-item.active .page-link-custom {
+        background: var(--neon-green-dim) !important;
+        border-color: var(--neon-green) !important;
+        color: var(--neon-green) !important;
+        box-shadow: 0 0 10px rgba(0,255,136,0.2);
+    }
+    .page-link-custom:hover {
+        background: rgba(255,255,255,0.05) !important;
+        color: var(--text-main) !important;
+    }
+</style>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3 d-flex align-items-center justify-content-between shadow-neon border-0 rounded-3" style="background: var(--neon-green-dim); color: var(--neon-green); border: 1px solid var(--neon-green) !important;" role="alert">
+        <div>
+            <i class="bi bi-check-circle-fill me-2"></i><strong>Успіх!</strong> @TempData["SuccessMessage"]
+        </div>
+        @if (TempData["LastBatchId"] != null)
+        {
+            <form asp-action="UndoImport" asp-controller="Transaction" method="post" class="m-0">
+                <input type="hidden" name="batchId" value="@TempData["LastBatchId"]" />
+                <input type="hidden" name="businessId" value="@selectedBusinessId" />
+                <button type="submit" class="btn btn-danger btn-sm fw-bold rounded-pill px-3 shadow-sm bg-danger text-white border-0" onclick="return confirm('Ви впевнені, що хочете скасувати останній імпорт і видалити ці транзакції?');">
+                    <i class="bi bi-arrow-counterclockwise"></i> Скасувати імпорт
+                </button>
+            </form>
+        }
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3 shadow-sm border-0 rounded-3" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444 !important;" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <div>
+        <h2 class="page-title mb-1">@ViewData["Title"]</h2>
+        <p class="text-muted">Історія ваших доходів та витрат</p>
+    </div>
+    <div class="d-flex gap-3">
+        <button type="button" class="btn-modern shadow-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-cloud-arrow-up text-primary"></i> Імпорт (CSV)
+        </button>
+        <a asp-action="Create" asp-route-businessId="@selectedBusinessId" class="btn-modern btn-modern-primary shadow-sm">
+            <i class="bi bi-plus-circle"></i> Додати
+        </a>
+    </div>
+</div>
+
+<div class="glass-card mb-4 p-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Оберіть бізнес</label>
+            <select name="businessId" class="form-select" onchange="this.form.submit()">
+                @foreach (var b in businesses)
+                {
+                    <option value="@b.Id" selected="@(selectedBusinessId == b.Id)">
+                        @b.Name
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Початкова дата</label>
+            <input type="date" name="startDate" id="startDate" class="form-control" value="@startDate" />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Кінцева дата</label>
+            <input type="date" name="endDate" id="endDate" class="form-control" value="@endDate" />
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit" class="btn-modern w-100 shadow-sm" style="border-color: rgba(255,255,255,0.2);">
+                <i class="bi bi-funnel"></i> Фільтрувати
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="glass-card p-0 overflow-hidden">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-modern table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Дата</th>
+                        <th>Тип</th>
+                        <th>Товар / Послуга</th>
+                        <th class="text-end">Кількість</th>
+                        <th class="text-end">Ціна (₴)</th>
+                        <th class="text-end">Сума (₴)</th>
+                        <th>Опис</th>
+                        <th class="text-center pe-4">Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-medium text-main">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05);">
+                                        <i class="bi bi-calendar-event text-muted"></i>
+                                    </div>
+                                    @t.Date.ToShortDateString()
+                                </div>
+                            </td>
+                            <td>
+                                @if(t.TransactionType == BusinessAnalytics.Models.Entities.TransactionType.Income)
+                                {
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: rgba(0,255,136,0.1); color: var(--neon-green); border: 1px solid rgba(0,255,136,0.3); white-space: nowrap;">
+                                        <i class="bi bi-arrow-up-right"></i>Прибуток
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap;">
+                                        <i class="bi bi-arrow-down-right"></i>Витрата
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-main">@(t.Product?.Name ?? "—")</td>
+                            <td class="text-end text-muted">@t.Quantity</td>
+                            <td class="text-end text-muted">@(t.UnitPrice.HasValue ? t.UnitPrice.Value.ToString("0.00") : "0.00")</td>
+                            <td class="text-end fw-bold @(t.TransactionType == BusinessAnalytics.Models.Entities.TransactionType.Income ? "" : "text-danger")"
+                                style="@(t.TransactionType == BusinessAnalytics.Models.Entities.TransactionType.Income ? "color: var(--neon-green);" : "")">
+                                @(t.TransactionType == BusinessAnalytics.Models.Entities.TransactionType.Income ? "+" : "-")@t.TotalAmount.ToString("0.00")
+                            </td>
+                            <td class="text-muted small">@(string.IsNullOrEmpty(t.Description) ? "—" : t.Description)</td>
+                            <td class="text-center pe-4">
+                                <form asp-action="Delete" asp-route-id="@t.Id" asp-route-businessId="@selectedBusinessId" method="post" class="m-0" onsubmit="return confirm('Ви впевнені, що хочете видалити цю транзакцію?');">
+                                    <button type="submit" class="btn-modern p-2 bg-danger" title="Видалити" style="font-size: 0.9rem;">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Пагінація -->
+        <div class="d-flex justify-content-center p-3" style="background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05);">
+            <nav aria-label="Transaction pagination">
+                <ul class="pagination pagination-sm m-0 gap-1">
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link page-link-custom rounded-2"
+                               href="@Url.Action("Index", new { businessId = selectedBusinessId, page = i, startDate = startDate, endDate = endDate })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-wallet2 text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+            <h5 class="fw-bold text-main">Немає транзакцій</h5>
+            <p class="text-muted">За обраний період транзакцій не знайдено.</p>
+        </div>
+    }
+</div>
+
+<!-- Modal for CSV Import -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border-0 p-0 overflow-hidden">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h5 class="modal-title fw-bold text-main" id="importModalLabel"><i class="bi bi-filetype-csv me-2" style="color: var(--neon-green);"></i>Імпорт виписки</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="UploadCsv" asp-controller="Transaction" method="post" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="businessId" value="@selectedBusinessId" />
+                    
+                    <div class="mb-4">
+                        <label for="csvFile" class="form-label text-main">Оберіть файл (.csv)</label>
+                        <input class="form-control" type="file" id="csvFile" name="file" accept=".csv" required>
+                    </div>
+                    
+                    <div class="alert border-0 rounded-3 small mb-0 shadow-sm" style="background: rgba(59, 130, 246, 0.1); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3) !important;">
+                        <p class="mb-1 fw-bold text-white"><i class="bi bi-info-circle me-1"></i>Вимоги до формату:</p>
+                        Файл має містити заголовки та 3 колонки (Date; Amount; Description), розділені крапкою з комою (;).<br/>
+                        <code class="d-block mt-2 p-2 rounded text-main" style="background: rgba(0,0,0,0.3);">26.03.2026; 1500,00; Оплата за послуги</code>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                    <button type="button" class="btn-modern" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="submit" class="btn-modern btn-modern-primary">
+                        <i class="bi bi-cloud-arrow-up"></i> Завантажити
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const startInput = document.getElementById("startDate");
+            const endInput = document.getElementById("endDate");
+
+            if (!startInput.value || !endInput.value) {
+                const today = new Date();
+                const prior = new Date();
+                prior.setDate(today.getDate() - 30);
+
+                endInput.value = today.toISOString().split('T')[0];
+                startInput.value = prior.toISOString().split('T')[0];
+            }
+        });
+    </script>
+}

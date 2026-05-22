@@ -1,0 +1,34 @@
+@model BusinessAnalytics.Models.ViewModels.VerifyEmailViewModel
+@{
+    ViewData["Title"] = "Підтвердження Email";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <i class="bi bi-envelope-check text-muted mb-3 d-block" style="font-size: 3rem; color: var(--neon-green) !important; text-shadow: 0 0 15px var(--neon-green-glow);"></i>
+                <h2 class="page-title mb-2">Підтвердження пошти</h2>
+                <p class="text-muted">Ми надіслали 6-значний код на <strong style="color: var(--neon-green);">@Model.Email</strong></p>
+            </div>
+            
+            <form asp-action="VerifyEmail" method="post">
+                <input type="hidden" asp-for="Email" />
+                
+                <div class="mb-4">
+                    <label asp-for="Code" class="form-label">Код підтвердження</label>
+                    <input asp-for="Code" class="form-control text-center fs-4 fw-bold" placeholder="000000" style="letter-spacing: 5px;" maxlength="6" autocomplete="off" />
+                    <span asp-validation-for="Code" class="text-danger small d-block mt-2 text-center"></span>
+                </div>
+
+                <button type="submit" class="btn-modern btn-modern-primary w-100 py-3">
+                    Підтвердити <i class="bi bi-check2-circle ms-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

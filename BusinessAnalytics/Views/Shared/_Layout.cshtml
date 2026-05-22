@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="uk" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Business Analytics</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Custom site styles -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/BusinessAnalytics.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-wrapper">
+        <div class="sidebar-backdrop d-lg-none" id="sidebarBackdrop"></div>
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-bar-chart-fill"></i> BusAnalytics
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                @if(User!=null && User.Identity.IsAuthenticated)
+                {
+                    if (User.IsInRole("User") || User.IsInRole("ProUser"))
+                    {
+                        <a class="nav-item-custom" asp-controller="Dashboard" asp-action="Index">
+                            <i class="bi bi-briefcase"></i> Мої Бізнеси
+                        </a>
+                        <a class="nav-item-custom" asp-controller="ProductCategory" asp-action="Index">
+                            <i class="bi bi-tags"></i> Категорії
+                        </a>
+                        <a class="nav-item-custom" asp-controller="Product" asp-action="Index">
+                            <i class="bi bi-box-seam"></i> Товари
+                        </a>
+                        <a class="nav-item-custom" asp-controller="Transaction" asp-action="Index">
+                            <i class="bi bi-cash-coin"></i> Транзакції
+                        </a>
+                        <a class="nav-item-custom" asp-controller="Utilities" asp-action="Index">
+                            <i class="bi bi-wallet2"></i> Операційні витрати
+                        </a>
+                        <a class="nav-item-custom" asp-controller="Analytics" asp-action="Index">
+                            <i class="bi bi-graph-up-arrow"></i> Аналітика
+                        </a>
+                        <a class="nav-item-custom" asp-controller="Home" asp-action="Guide">
+                            <i class="bi bi-journal-text"></i> Довідник
+                        </a>
+                        @if (User.IsInRole("ProUser"))
+                        {
+                            <a class="nav-item-custom text-warning" asp-area="" asp-controller="AiConsultant" asp-action="Index">
+                                <i class="bi bi-robot"></i> AI-Консультант
+                            </a>
+                        }
+                    }
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <a class="nav-item-custom" asp-controller="Admin" asp-action="Index">
+                            <i class="bi bi-shield-lock"></i> Керування підписками
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="nav-item-custom" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-house"></i> Головна
+                        </a>
+                    }
+                }
+                else
+                {
+                    <a class="nav-item-custom" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-house"></i> Головна
+                    </a>
+                }
+
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="contact-block pb-3 mb-3 border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
+                    <div class="small text-muted">Наш контактний номер</div>
+                    <a href="tel:+380673859801" class="contact-phone">
+                        +38 (067) 385-98-01
+                    </a>
+                </div>
+                <small class="text-muted">&copy; 2026 - BusAnalytics</small>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="main-content">
+            <!-- Topbar (User menu) -->
+            <header class="topbar">
+                <div class="d-flex align-items-center w-100 justify-content-between">
+                    <button class="btn btn-link d-lg-none text-main" id="sidebarToggle">
+                        <i class="bi bi-list fs-3" style="color: var(--neon-green);"></i>
+                    </button>
+                <div class="d-flex align-items-center gap-3 ms-auto">
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" onclick="toggleTheme()" title="Змінити тему"
+                            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 40px; padding: 6px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 0.85rem; font-weight: 500; transition: all 0.3s;">
+                        <span id="themeIcon">🌙</span>
+                        <span id="themeLabel">Темна</span>
+                    </button>
+                    <partial name="_LoginPartial" />
+                </div>
+                </div>
+            </header>
+
+            <!-- Page Content Container -->
+            <div class="content-wrapper">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Toggle Sidebar on mobile
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('show');
+            sidebarBackdrop.classList.toggle('show');
+        }
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+        
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', toggleSidebar);
+        }
+
+        // ===== THEME TOGGLE =====
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('themeIcon');
+        const themeLabel = document.getElementById('themeLabel');
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('busan-theme') || 'dark';
+        applyTheme(savedTheme);
+
+        function applyTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            if (theme === 'light') {
+                themeIcon.textContent = '☀️';
+                themeLabel.textContent = 'Світла';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeLabel.textContent = 'Темна';
+            }
+            localStorage.setItem('busan-theme', theme);
+        }
+
+        function toggleTheme() {
+            const current = html.getAttribute('data-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

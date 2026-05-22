@@ -1,0 +1,166 @@
+@model BusinessAnalytics.Models.Entities.Transaction
+@{
+    ViewData["Title"] = "Додати транзакцію";
+    var businesses = ViewBag.Businesses as List<BusinessAnalytics.Models.Entities.BusinessAccount>;
+    var selectedBusinessId = ViewBag.SelectedBusinessId as Guid?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <div>
+        <h2 class="page-title mb-1">@ViewData["Title"]</h2>
+        <p class="text-muted">Запишіть новий прибуток або витрату.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="glass-card p-5">
+            <form asp-action="Create" method="post" id="transactionForm">
+                
+                <div class="mb-4">
+                    <label class="form-label">Оберіть бізнес</label>
+                    <select name="businessId" id="businessSelect" class="form-select" onchange="onBusinessChange(this.value)">
+                        @if(businesses != null)
+                        {
+                            foreach (var b in businesses)
+                            {
+                                <option value="@b.Id" selected="@(selectedBusinessId == b.Id)">@b.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Дата транзакції</label>
+                        <input type="date" name="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Тип транзакції</label>
+                        <select name="transactionType" class="form-select">
+                            <option value="Income">Прибуток</option>
+                            <option value="Expense">Витрата</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Категорія товарів/послуг</label>
+                    <select id="categorySelect" class="form-select" onchange="loadProducts()">
+                        <option value="">-- Усі категорії --</option>
+                    </select>
+                </div>
+
+                <!-- Product Selection Area -->
+                <div class="mb-5">
+                    <label class="form-label mb-3 d-block">Вибір товарів</label>
+                    <div id="productContainer" class="p-4 rounded-3 text-center" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+                        <i class="bi bi-box-seam text-muted mb-2 d-block" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">Завантаження продуктів...</p>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 pt-4" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <a asp-action="Index" class="btn-modern px-4">
+                        Скасувати
+                    </a>
+                    <button type="submit" class="btn-modern btn-modern-primary px-5">
+                        <i class="bi bi-check-circle me-2"></i> Зберегти
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const businessSelect = document.getElementById('businessSelect');
+        const categorySelect = document.getElementById('categorySelect');
+        const productContainer = document.getElementById('productContainer');
+
+        function onBusinessChange(bizId) {
+            if (!bizId) return;
+            
+            // Load Categories
+            fetch(`/Transaction/GetCategoriesByBusiness?businessId=${bizId}`)
+                .then(r => r.json())
+                .then(data => {
+                    categorySelect.innerHTML = '<option value="">-- Усі категорії --</option>';
+                    data.forEach(c => {
+                        const opt = document.createElement("option");
+                        opt.value = c.id;
+                        opt.text = c.name;
+                        categorySelect.add(opt);
+                    });
+                });
+            
+            loadProducts();
+        }
+
+        function loadProducts() {
+            const bizId = businessSelect.value;
+            const catId = categorySelect.value;
+            if (!bizId) return;
+
+            productContainer.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+
+            fetch(`/Transaction/GetProductsByBusinessAndCategory?businessId=${bizId}&categoryId=${catId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        productContainer.innerHTML = '<div class="text-muted py-3">В цій категорії немає товарів.</div>';
+                        return;
+                    }
+
+                    let tableHtml = `
+                        <div class="table-responsive text-start">
+                            <table class="table table-modern align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Назва</th>
+                                        <th class="text-center">Кількість</th>
+                                        <th>Ціна (₴)</th>
+                                        <th class="text-end pe-4">Разом (₴)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    data.forEach(p => {
+                        tableHtml += `
+                            <tr>
+                                <td class="ps-4 fw-medium text-main">
+                                    ${p.name}
+                                    <input type="hidden" name="productIds" value="${p.id}" />
+                                </td>
+                                <td class="text-center" style="width: 120px;">
+                                    <input type="number" name="quantities" class="form-control form-control-sm text-center qty-input" min="0" value="0" data-price="${p.finalPrice}" data-id="${p.id}" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main);" />
+                                </td>
+                                <td>${p.finalPrice.toFixed(2)}</td>
+                                <td class="text-end pe-4 fw-bold" style="color: var(--neon-green);" id="total_${p.id}">0.00</td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHtml += `</tbody></table></div>`;
+                    productContainer.innerHTML = tableHtml;
+
+                    document.querySelectorAll('.qty-input').forEach(input => {
+                        input.addEventListener('input', function() {
+                            const qty = parseFloat(this.value) || 0;
+                            const price = parseFloat(this.dataset.price) || 0;
+                            const total = qty * price;
+                            document.getElementById(`total_${this.dataset.id}`).innerText = total.toFixed(2);
+                        });
+                    });
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (businessSelect.value) {
+                onBusinessChange(businessSelect.value);
+            }
+        });
+    </script>
+}

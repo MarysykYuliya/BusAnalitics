@@ -1,0 +1,67 @@
+@model List<BusinessAnalytics.Models.Entities.BusinessAccount>
+
+@{
+    ViewData["Title"] = "Мої бізнеси";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <div>
+        <h2 class="page-title mb-1">Мої бізнеси</h2>
+        <p class="text-muted">Керуйте своїми компаніями та переглядайте аналітику</p>
+    </div>
+    <a asp-controller="Business" asp-action="Create" class="btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle"></i> Новий бізнес
+    </a>
+</div>
+
+<div class="row g-4">
+    @foreach (var business in Model)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="glass-card h-100 d-flex flex-column p-0 overflow-hidden" style="border: 1px solid rgba(0, 255, 136, 0.2);">
+                @if (!string.IsNullOrEmpty(business.LogoPath))
+                {
+                    <div style="height: 160px; background-image: url('@business.LogoPath'); background-size: cover; background-position: center; border-bottom: 1px solid rgba(255,255,255,0.05);"></div>
+                }
+                else
+                {
+                    <div style="height: 160px; background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(16, 185, 129, 0.05)); border-bottom: 1px solid rgba(255,255,255,0.05);" class="d-flex align-items-center justify-content-center">
+                        <i class="bi bi-building text-main" style="font-size: 4rem; opacity: 0.8; color: var(--neon-green); text-shadow: 0 0 15px var(--neon-green);"></i>
+                    </div>
+                }
+                
+                <div class="p-4 flex-grow-1 d-flex flex-column">
+                    <h5 class="fw-bold text-main mb-2">@business.Name</h5>
+                    <p class="text-muted small flex-grow-1">@(string.IsNullOrEmpty(business.Description) ? "Немає опису" : business.Description)</p>
+                    
+                    <div class="d-flex gap-2 mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                        <a asp-controller="Business" asp-action="Edit" asp-route-id="@business.Id" class="btn-modern flex-grow-1 text-center shadow-sm">
+                            <i class="bi bi-pencil-square"></i> Редаг.
+                        </a>
+                        <form asp-controller="Business" asp-action="Delete" asp-route-id="@business.Id" method="post" class="flex-grow-1 m-0">
+                            <button type="submit" class="btn-modern bg-danger w-100 shadow-sm" onclick="return confirm('Видалити цей бізнес?')">
+                                <i class="bi bi-trash3"></i> Видалити
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="col-12">
+            <div class="glass-card text-center py-5" style="border: 1px dashed rgba(0, 255, 136, 0.3);">
+                <div class="mb-3">
+                    <i class="bi bi-shop text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="fw-bold text-main">У вас поки немає бізнесів!</h5>
+                <p class="text-muted mb-4">Додайте свій перший бізнес, щоб почати вести облік та аналітику.</p>
+                <a asp-controller="Business" asp-action="Create" class="btn-modern btn-modern-primary">
+                    <i class="bi bi-plus-circle"></i> Створити бізнес
+                </a>
+            </div>
+        </div>
+    }
+</div>

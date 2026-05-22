@@ -1,0 +1,104 @@
+@model BusinessAnalytics.Models.Entities.Product
+@{
+    ViewData["Title"] = "Редагувати продукт";
+    var businessId = ViewBag.BusinessId;
+    var categories = ViewBag.Categories as List<BusinessAnalytics.Models.Entities.ProductCategory>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <div>
+        <h2 class="page-title mb-1">@ViewData["Title"]</h2>
+        <p class="text-muted">Змініть інформацію про товар або послугу.</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="glass-card p-5">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="BusinessAccountId" />
+                
+                <div class="mb-4">
+                    <label asp-for="Name" class="form-label">Назва <span class="text-danger">*</span></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="Type" class="form-label">Тип</label>
+                        <select asp-for="Type" class="form-select">
+                            <option value="Good">Товар</option>
+                            <option value="Service">Послуга</option>
+                        </select>
+                        <span asp-validation-for="Type" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ProductCategoryId" class="form-label">Категорія</label>
+                        <select asp-for="ProductCategoryId" class="form-select">
+                            <option value="">Без категорії</option>
+                            @if (categories != null)
+                            {
+                                foreach (var c in categories)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="ProductCategoryId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                        <label asp-for="CostPrice" class="form-label">Собівартість (₴)</label>
+                        <input asp-for="CostPrice" class="form-control" />
+                        <span asp-validation-for="CostPrice" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="MarkupPercent" class="form-label">Націнка (%)</label>
+                        <input asp-for="MarkupPercent" class="form-control" />
+                        <span asp-validation-for="MarkupPercent" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-3 text-center mb-5" style="background: rgba(0, 255, 136, 0.05); border: 1px dashed rgba(0, 255, 136, 0.3);">
+                    <p class="text-muted mb-1">Кінцева ціна:</p>
+                    <h3 class="fw-bold m-0" style="color: var(--neon-green);" id="finalPricePreview">0.00 ₴</h3>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 pt-4" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <a asp-action="Index" asp-route-businessId="@businessId" class="btn-modern px-4">
+                        Скасувати
+                    </a>
+                    <button type="submit" class="btn-modern btn-modern-primary px-5">
+                        <i class="bi bi-save me-2"></i> Зберегти
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const costInput = document.getElementById('CostPrice');
+        const markupInput = document.getElementById('MarkupPercent');
+        const preview = document.getElementById('finalPricePreview');
+
+        function updatePreview() {
+            let costVal = costInput.value.replace(',', '.');
+            let markupVal = markupInput.value.replace(',', '.');
+            const cost = parseFloat(costVal) || 0;
+            const markup = parseFloat(markupVal) || 0;
+            const final = cost + (cost * markup / 100);
+            preview.innerText = final.toFixed(2) + ' ₴';
+        }
+
+        costInput.addEventListener('input', updatePreview);
+        markupInput.addEventListener('input', updatePreview);
+        updatePreview();
+    </script>
+}

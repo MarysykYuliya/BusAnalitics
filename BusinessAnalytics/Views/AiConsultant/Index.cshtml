@@ -1,0 +1,391 @@
+@{
+    ViewData["Title"] = "AI Аналітик";
+    var hasReport = ViewBag.Report != null;
+}
+
+<style>
+    .ai-chat-wrapper {
+        max-width: 860px;
+        margin: 0 auto;
+    }
+
+    .ai-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 2rem;
+    }
+
+    .ai-avatar-big {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,255,136,0.05));
+        border: 2px solid var(--neon-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        box-shadow: 0 0 20px rgba(0,255,136,0.3);
+        flex-shrink: 0;
+    }
+
+    .ai-status-dot {
+        width: 10px;
+        height: 10px;
+        background: var(--neon-green);
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+        box-shadow: 0 0 8px var(--neon-green);
+        animation: pulse-dot 2s infinite;
+    }
+
+    @@keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(0.8); }
+    }
+
+    /* Chat area */
+    .chat-area {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-height: 380px;
+    }
+
+    /* Message bubble — AI */
+    .msg-ai {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: fadeInUp 0.4s ease;
+    }
+
+    .msg-ai-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,180,100,0.1));
+        border: 1px solid rgba(0,255,136,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .msg-ai-bubble {
+        background: rgba(0, 255, 136, 0.04);
+        border: 1px solid rgba(0,255,136,0.15);
+        border-radius: 0 16px 16px 16px;
+        padding: 16px 20px;
+        flex: 1;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: var(--text-main);
+    }
+
+    .msg-ai-bubble h3, .msg-ai-bubble h4 {
+        color: var(--neon-green);
+        margin-top: 0.5rem;
+    }
+
+    .msg-ai-bubble b, .msg-ai-bubble strong {
+        color: var(--neon-green);
+    }
+
+    /* Message bubble — User/System */
+    .msg-user {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        flex-direction: row-reverse;
+        animation: fadeInUp 0.3s ease;
+    }
+
+    .msg-user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .msg-user-bubble {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px 0 16px 16px;
+        padding: 12px 18px;
+        max-width: 70%;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    /* Placeholder state */
+    .chat-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        min-height: 320px;
+        gap: 12px;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .chat-placeholder-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(0,255,136,0.05);
+        border: 1px dashed rgba(0,255,136,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        animation: float 4s ease-in-out infinite;
+    }
+
+    @@keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+
+    /* Bottom form */
+    .chat-input-area {
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding-top: 20px;
+        margin-top: 20px;
+    }
+
+    .chat-select-wrapper {
+        position: relative;
+        flex: 1;
+    }
+
+    .chat-select-wrapper select {
+        appearance: none;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 40px;
+        color: var(--text-main);
+        padding: 12px 44px 12px 18px;
+        width: 100%;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .chat-select-wrapper select:focus {
+        outline: none;
+        border-color: rgba(0,255,136,0.5);
+        box-shadow: 0 0 0 3px rgba(0,255,136,0.1);
+    }
+
+    .chat-select-wrapper::after {
+        content: '';
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 6px;
+        background: var(--neon-green);
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        pointer-events: none;
+    }
+
+    .btn-send {
+        background: linear-gradient(135deg, var(--neon-green), #00cc88);
+        color: #000;
+        border: none;
+        border-radius: 40px;
+        padding: 12px 28px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .btn-send:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(0,255,136,0.4);
+    }
+
+    .btn-send:active {
+        transform: translateY(0);
+    }
+
+    .btn-send.loading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+</style>
+
+<div class="ai-chat-wrapper">
+
+    <!-- Header -->
+    <div class="ai-header">
+        <div class="ai-avatar-big">🤖</div>
+        <div>
+            <h2 class="page-title mb-1">AI Аналітик</h2>
+            <p class="text-muted mb-0">
+                <span class="ai-status-dot"></span>
+                Онлайн · Powered by Google Gemini
+            </p>
+        </div>
+    </div>
+
+    <!-- Chat Card -->
+    <div class="glass-card p-4" style="min-height: 500px; display: flex; flex-direction: column;">
+
+        <!-- Chat Messages Area -->
+        <div class="chat-area flex-grow-1">
+
+            @if (ViewBag.ReportError == "unavailable")
+            {
+                <!-- User message -->
+                <div class="msg-user">
+                    <div class="msg-user-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div class="msg-user-bubble">📊 Проаналізуй фінансові результати мого бізнесу та дай рекомендації.</div>
+                </div>
+                <!-- Error message -->
+                <div class="msg-ai">
+                    <div class="msg-ai-avatar">🤖</div>
+                    <div class="msg-ai-bubble" style="border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05);">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px solid rgba(251,191,36,0.15);">
+                            <span style="color: #fbbf24; font-size: 0.8rem; font-weight: 700;">⚠️ Тимчасова проблема</span>
+                        </div>
+                        <p class="mb-2">Сервери Google Gemini зараз дуже перевантажені — занадто багато запитів по всьому світу одночасно.</p>
+                        <p class="mb-0 text-muted" style="font-size: 0.85rem;">Це тимчасово. Зачекайте 1-2 хвилини і натисніть «Аналізувати» ще раз — все спрацює! 🔁</p>
+                    </div>
+                </div>
+            }
+            else if (ViewBag.ReportError == "generic")
+            {
+                <div class="msg-user">
+                    <div class="msg-user-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div class="msg-user-bubble">📊 Проаналізуй фінансові результати мого бізнесу та дай рекомендації.</div>
+                </div>
+                <div class="msg-ai">
+                    <div class="msg-ai-avatar">🤖</div>
+                    <div class="msg-ai-bubble" style="border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05);">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px solid rgba(239,68,68,0.15);">
+                            <span style="color: #ef4444; font-size: 0.8rem; font-weight: 700;">❌ Помилка підключення</span>
+                        </div>
+                        <p class="mb-2">Не вдалося отримати відповідь від Google Gemini. Перевірте правильність API-ключа в <code>appsettings.json</code>.</p>
+                    </div>
+                </div>
+            }
+            else if (hasReport)
+            {
+                <!-- User message -->
+                <div class="msg-user">
+                    <div class="msg-user-avatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="msg-user-bubble">
+                        📊 Проаналізуй фінансові результати мого бізнесу та дай рекомендації.
+                    </div>
+                </div>
+
+                <!-- AI thinking indicator (shows briefly before content) -->
+                <div class="msg-ai">
+                    <div class="msg-ai-avatar">🤖</div>
+                    <div class="msg-ai-bubble">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2" style="border-bottom: 1px solid rgba(0,255,136,0.1);">
+                            <span style="color: var(--neon-green); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">AI Аналітик</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">щойно</span>
+                        </div>
+                        @Html.Raw(ViewBag.Report)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Placeholder -->
+                <div class="chat-placeholder">
+                    <div class="chat-placeholder-icon">🧠</div>
+                    <h5 class="text-main mb-1">AI Аналітик готовий до роботи</h5>
+                    <p class="text-muted text-center mb-0" style="max-width: 340px; font-size: 0.9rem;">
+                        Оберіть бізнес і натисніть «Аналізувати» — я проаналізую ваші транзакції і дам персональні рекомендації від Google Gemini.
+                    </p>
+                </div>
+            }
+
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+            <form asp-action="Generate" asp-controller="AiConsultant" method="post"
+                  onsubmit="this.querySelector('.btn-send').classList.add('loading'); this.querySelector('.btn-send span').textContent='Аналізую...'">
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="chat-select-wrapper">
+                        <select name="businessId" required>
+                            @if (ViewBag.Businesses != null)
+                            {
+                                foreach (var b in ViewBag.Businesses)
+                                {
+                                    if (ViewBag.SelectedBusinessId != null && ViewBag.SelectedBusinessId == b.Id)
+                                    {
+                                        <option value="@b.Id" selected>@b.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@b.Id">@b.Name</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-send">
+                        <i class="bi bi-stars"></i>
+                        <span>Аналізувати</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tips below -->
+    <div class="row g-3 mt-2">
+        <div class="col-md-4">
+            <div class="glass-card p-3 text-center" style="border-color: rgba(0,255,136,0.1);">
+                <div style="font-size: 1.5rem; margin-bottom: 6px;">📈</div>
+                <p class="text-muted mb-0" style="font-size: 0.8rem;">Аналіз доходів та витрат</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-3 text-center" style="border-color: rgba(0,255,136,0.1);">
+                <div style="font-size: 1.5rem; margin-bottom: 6px;">💡</div>
+                <p class="text-muted mb-0" style="font-size: 0.8rem;">Персональні рекомендації</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-3 text-center" style="border-color: rgba(0,255,136,0.1);">
+                <div style="font-size: 1.5rem; margin-bottom: 6px;">🎯</div>
+                <p class="text-muted mb-0" style="font-size: 0.8rem;">Стратегія зростання</p>
+            </div>
+        </div>
+    </div>
+</div>

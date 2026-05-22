@@ -1,0 +1,288 @@
+@model BusinessAnalytics.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Профіль";
+    var activeTab = TempData["ProfileTab"] as string ?? "info";
+}
+
+<style>
+    .profile-avatar {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,180,80,0.1));
+        border: 2px solid var(--neon-green);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2rem;
+        box-shadow: 0 0 30px rgba(0,255,136,0.3);
+        margin: 0 auto 1rem;
+    }
+    .profile-tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .profile-tab {
+        padding: 8px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.03); color: var(--text-muted);
+        cursor: pointer; font-size: 0.85rem; font-weight: 500;
+        transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .profile-tab:hover { border-color: rgba(0,255,136,0.4); color: var(--neon-green); }
+    .profile-tab.active {
+        background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.5);
+        color: var(--neon-green);
+    }
+    .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+    .tab-panel.active { display: block; }
+    .info-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .danger-btn {
+        background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3);
+        color: #ef4444; border-radius: 30px; padding: 10px 24px;
+        font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%;
+        font-size: 0.9rem;
+    }
+    .danger-btn:hover { background: rgba(239,68,68,0.15); box-shadow: 0 0 20px rgba(239,68,68,0.2); }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<div class="row justify-content-center" style="max-width: 700px; margin: 0 auto;">
+    <div class="col-12">
+
+        @if (TempData["ProfileSuccess"] != null)
+        {
+            <div class="mb-4 p-3 rounded-3 fw-semibold" style="background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3); color: var(--neon-green);">
+                <i class="bi bi-check-circle me-2"></i>@TempData["ProfileSuccess"]
+            </div>
+        }
+        @if (TempData["ProfileError"] != null)
+        {
+            <div class="mb-4 p-3 rounded-3 fw-semibold" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #ef4444;">
+                <i class="bi bi-exclamation-circle me-2"></i>@TempData["ProfileError"]
+            </div>
+        }
+
+        <!-- Header card -->
+        <div class="glass-card p-4 text-center mb-4">
+            <div class="profile-avatar">👤</div>
+            <h4 class="fw-bold text-main mb-1">@Model.Email</h4>
+            <span style="font-size: 0.8rem; padding: 3px 12px; border-radius: 20px;
+                         background: rgba(0,255,136,0.1); color: var(--neon-green); border: 1px solid rgba(0,255,136,0.3);">
+                <i class="bi bi-shield-check me-1"></i>Активний акаунт
+            </span>
+        </div>
+
+        <!-- Tabs -->
+        <div class="profile-tabs">
+            <a class="profile-tab @(activeTab == "info" ? "active" : "")" onclick="showTab('info')">
+                <i class="bi bi-person"></i> Інформація
+            </a>
+            <a class="profile-tab @(activeTab == "password" ? "active" : "")" onclick="showTab('password')">
+                <i class="bi bi-lock"></i> Зміна пароля
+            </a>
+            <a class="profile-tab @(activeTab == "email" ? "active" : "")" onclick="showTab('email')">
+                <i class="bi bi-envelope"></i> Зміна email
+            </a>
+            @if (User.IsInRole("ProUser"))
+            {
+                <a class="profile-tab @(activeTab == "telegram" ? "active" : "")" onclick="showTab('telegram')">
+                    <i class="bi bi-telegram"></i> Telegram звіти
+                </a>
+            }
+            <a class="profile-tab" onclick="showTab('danger')" style="margin-left: auto;">
+                <i class="bi bi-box-arrow-right" style="color: #ef4444;"></i> Вийти
+            </a>
+        </div>
+
+        <!-- Info Tab -->
+        <div id="tab-info" class="tab-panel glass-card p-4 @(activeTab == "info" ? "active" : "")">
+            <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Дані акаунта</h6>
+            <div class="info-row">
+                <span class="text-muted">Email</span>
+                <strong class="text-main">@Model.Email</strong>
+            </div>
+            <div class="info-row">
+                <span class="text-muted">Статус підтвердження</span>
+                @if (Model.EmailConfirmed)
+                {
+                    <span style="color: var(--neon-green); font-size: 0.85rem;"><i class="bi bi-check-circle-fill me-1"></i>Підтверджено</span>
+                }
+                else
+                {
+                    <span style="color: #fbbf24; font-size: 0.85rem;"><i class="bi bi-exclamation-circle me-1"></i>Не підтверджено</span>
+                }
+            </div>
+        </div>
+
+        <!-- Password Tab -->
+        <div id="tab-password" class="tab-panel glass-card p-4 @(activeTab == "password" ? "active" : "")">
+            <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Зміна пароля</h6>
+            @if (TempData["PasswordError"] != null)
+            {
+                <div class="mb-3 p-3 rounded-3 small" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #ef4444;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>@TempData["PasswordError"]
+                </div>
+            }
+            <form asp-action="ChangePassword" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">Поточний пароль</label>
+                    <input type="password" name="CurrentPassword" class="form-control" placeholder="••••••••" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Новий пароль</label>
+                    <input type="password" name="NewPassword" class="form-control" placeholder="Мінімум 6 символів" required />
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Підтвердження пароля</label>
+                    <input type="password" name="ConfirmPassword" class="form-control" placeholder="Повторіть пароль" required />
+                </div>
+                <button type="submit" class="btn-modern btn-modern-primary w-100">
+                    <i class="bi bi-lock-fill me-2"></i>Змінити пароль
+                </button>
+            </form>
+        </div>
+
+        <!-- Email Tab -->
+        <div id="tab-email" class="tab-panel glass-card p-4 @(activeTab == "email" ? "active" : "")">
+            <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Зміна email</h6>
+            <div class="mb-3 p-3 rounded-2 small" style="background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.15); color: var(--text-muted);">
+                <i class="bi bi-info-circle me-1" style="color: var(--neon-green);"></i>
+                На <strong>нову пошту</strong> буде надіслано 6-значний код підтвердження.
+            </div>
+            @if (TempData["EmailError"] != null)
+            {
+                <div class="mb-3 p-3 rounded-3 small" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #ef4444;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>@TempData["EmailError"]
+                </div>
+            }
+            <form asp-action="RequestEmailChange" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+                <div class="mb-4">
+                    <label class="form-label">Поточна пошта</label>
+                    <input type="email" class="form-control" value="@Model.Email" disabled style="opacity: 0.5;" />
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Нова пошта</label>
+                    <input type="email" name="NewEmail" class="form-control" placeholder="nova@poshta.com" required />
+                </div>
+                <button type="submit" class="btn-modern btn-modern-primary w-100">
+                    <i class="bi bi-envelope-arrow-up me-2"></i>Надіслати код підтвердження
+                </button>
+            </form>
+        </div>
+
+        @if (User.IsInRole("ProUser"))
+        {
+            <!-- Telegram Tab - ProUser Only -->
+            <div id="tab-telegram" class="tab-panel glass-card p-4 @(activeTab == "telegram" ? "active" : "")">
+                <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">
+                    <i class="bi bi-telegram me-1" style="color: var(--neon-green);"></i>Telegram звіти
+                </h6>
+
+                @if (!string.IsNullOrEmpty(Model.TelegramChatId))
+                {
+                    <!-- CONNECTED STATE -->
+                    <div class="mb-4 p-4 rounded-3" style="background: rgba(0,255,136,0.06); border: 1px solid rgba(0,255,136,0.2);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,255,136,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📱</div>
+                            <div>
+                                <div class="fw-bold text-main">Telegram прив'язано</div>
+                                <div class="text-muted small">Звіти надходитимуть щодня о @(ViewBag.ReportHour ?? 20):00</div>
+                            </div>
+                            <span class="ms-auto" style="background: rgba(0,255,136,0.15); color: var(--neon-green); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">✓ Активно</span>
+                        </div>
+                    </div>
+
+                    <form asp-action="SendTestTelegramReport" asp-controller="Account" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-modern btn-modern-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2" style="font-size: 1rem;">
+                            <i class="bi bi-send-fill"></i> Надіслати тестовий звіт зараз
+                        </button>
+                    </form>
+
+                    <form asp-action="SaveTelegramChatId" asp-controller="Account" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="telegramChatId" value="" />
+                        <button type="submit" class="btn-modern w-100" style="border-color: rgba(239,68,68,0.3); color: #ef4444;"
+                                onclick="return confirm('Відключити Telegram звіти?')">
+                            <i class="bi bi-x-circle me-2"></i>Відключити Telegram
+                        </button>
+                    </form>
+                }
+                else if (ViewBag.TelegramDeepLink != null)
+                {
+                    <!-- LINK GENERATED -->
+                    <div class="mb-4 p-4 rounded-3 text-center" style="background: rgba(0,255,136,0.06); border: 1px dashed rgba(0,255,136,0.4);">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">🔗</div>
+                        <p class="fw-semibold text-main mb-1">Посилання готове!</p>
+                        <p class="text-muted small mb-4">Натисніть кнопку нижче — Telegram відкриється автоматично та прив'яже ваш акаунт.</p>
+                        <a href="@ViewBag.TelegramDeepLink" target="_blank"
+                           class="btn-modern btn-modern-primary d-inline-flex align-items-center gap-2 px-5 py-3"
+                           style="font-size: 1rem; text-decoration: none;">
+                            <i class="bi bi-telegram"></i>
+                            Відкрити Telegram і прив'язати
+                        </a>
+                        <p class="text-muted mt-3 mb-0" style="font-size: 0.78rem;">
+                            Посилання дійсне 15 хвилин. Після натискання поверніться на цю сторінку та оновіть її.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <!-- NOT CONNECTED STATE -->
+                    <div class="mb-4 p-4 rounded-3 text-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6;">📵</div>
+                        <p class="text-main fw-semibold mb-1">Telegram не прив'язано</p>
+                        <p class="text-muted small mb-0">Натисніть кнопку нижче — ми згенеруємо посилання, і Telegram відкриється автоматично.</p>
+                    </div>
+
+                    <div class="mb-4 p-3 rounded-2 small" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+                        <p class="fw-semibold text-main mb-2">Як це працює:</p>
+                        <ol class="text-muted mb-0" style="padding-left: 1.2rem; line-height: 2;">
+                            <li>Натисніть «Прив'язати Telegram» нижче</li>
+                            <li>Telegram відкриється з нашим ботом</li>
+                            <li>Натисніть <strong>START</strong> у Telegram</li>
+                            <li>Готово — акаунт прив'язано автоматично!</li>
+                        </ol>
+                    </div>
+
+                    <form asp-action="GenerateTelegramLink" asp-controller="Account" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-modern btn-modern-primary w-100 py-3" style="font-size: 1rem;">
+                            <i class="bi bi-telegram me-2"></i>Прив'язати Telegram
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+
+        <!-- Danger / Logout Tab -->
+        <div id="tab-danger" class="tab-panel glass-card p-4">
+            <h6 class="fw-bold text-muted mb-4 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Вийти з акаунта</h6>
+            <p class="text-muted mb-4" style="font-size: 0.9rem;">Ви вийдете з поточного сеансу. Щоб увійти знову, знадобиться пароль.</p>
+            <form asp-action="Logout" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="danger-btn">
+                    <i class="bi bi-box-arrow-right me-2"></i>Вийти з акаунта
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showTab(name) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + name)?.classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        // Auto-open tab from server
+        const autoTab = '@activeTab';
+        if (autoTab && autoTab !== 'info') {
+            document.getElementById('tab-' + autoTab)?.classList.add('active');
+            document.getElementById('tab-info')?.classList.remove('active');
+        }
+    </script>
+}

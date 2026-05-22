@@ -1,0 +1,746 @@
+@using BusinessAnalytics.Models.Entities
+@{
+    ViewData["Title"] = "Аналітика — порівняння бізнесів";
+    var businesses = ViewBag.Businesses as IEnumerable<BusinessAccount>;
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
+
+<style>
+    /* 🌌 DARK MODE OVERRIDE FOR THIS PAGE ONLY 🌌 */
+    body {
+        background-color: #0f172a !important; /* Slate 900 */
+        color: #f8fafc !important; /* Slate 50 */
+    }
+
+    .dark-dashboard {
+        --dark-bg: #1e293b; /* Slate 800 */
+        --dark-card: #0f172a; /* Slate 900 */
+        --neon-green: #10b981;
+        --neon-blue: #3b82f6;
+        --neon-purple: #8b5cf6;
+        --neon-pink: #ec4899;
+        
+        padding-bottom: 3rem;
+    }
+
+    .dark-dashboard .page-title {
+        color: #f8fafc !important;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+
+
+    /* 💎 Dark Glassmorphism Cards */
+    .glass-card-dark {
+        background: rgba(30, 41, 59, 0.7); /* Slate 800 with opacity */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .glass-card-dark:hover {
+        border-color: rgba(16, 185, 129, 0.3); /* Neon green subtle border on hover */
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.1);
+    }
+
+    /* 🎛️ Neon Toggle Buttons (Fixing the bug) */
+    .dark-dashboard .btn-check-custom + .btn-outline-primary {
+        background-color: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.3); /* Slate 400 border */
+        color: #cbd5e1; /* Slate 300 */
+        border-radius: 2rem;
+        padding: 0.5rem 1.2rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: none;
+    }
+    
+    .dark-dashboard .btn-check-custom:hover + .btn-outline-primary {
+        border-color: rgba(255, 255, 255, 0.5);
+        color: #fff;
+    }
+    
+    .dark-dashboard .btn-check-custom:checked + .btn-outline-primary {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2));
+        color: #10b981; /* Neon green text */
+        border-color: #10b981;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), inset 0 0 10px rgba(16, 185, 129, 0.2);
+        text-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    /* 📅 Dark Inputs */
+    .dark-dashboard input[type="date"] {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #f8fafc !important;
+        color-scheme: dark; /* Makes the calendar popup dark in Chrome/Edge */
+    }
+    
+    .dark-dashboard input[type="date"]:focus {
+        border-color: var(--neon-blue) !important;
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+    }
+
+    /* 🔲 Grid Layout */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .grid-full { grid-column: span 12; }
+    .grid-half { grid-column: span 6; }
+    .grid-one-third { grid-column: span 4; }
+    .grid-two-thirds { grid-column: span 8; }
+    
+    @@media (max-width: 1200px) {
+        .grid-one-third, .grid-two-thirds { grid-column: span 12; }
+    }
+    @@media (max-width: 992px) {
+        .grid-half { grid-column: span 12; }
+    }
+
+    .chart-container {
+        position: relative;
+        height: 100%;
+        min-height: 350px;
+        width: 100%;
+    }
+    
+    .chart-container-sm {
+        min-height: 280px;
+    }
+
+    /* 📊 Table Styling */
+    .table-dark-custom {
+        --bs-table-bg: transparent;
+        --bs-table-color: #f8fafc;
+        margin-bottom: 0;
+    }
+    .table-dark-custom th {
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        padding: 1.2rem 1rem;
+    }
+    .table-dark-custom td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .table-dark-custom tbody tr:hover {
+        background-color: rgba(255,255,255,0.02);
+    }
+    
+    /* 🚥 Custom Badges */
+    .badge-neon {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #cbd5e1;
+        font-weight: 500;
+        padding: 0.5rem 0.8rem;
+    }
+</style>
+
+<!-- Add a wrapper to scope the dark mode safely -->
+<div class="dark-dashboard">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+        <div>
+            <h3 class="page-title mb-1 fw-bold"><i class="bi bi-activity text-success me-2"></i>Аналітичний Термінал</h3>
+            <p class="text-muted mb-0">Розширена статистика та метрики</p>
+        </div>
+        <button id="savePdfBtn" class="btn rounded-pill px-4 shadow-sm" style="border: 1px solid currentColor; background: transparent;">
+            <i class="bi bi-download me-2"></i> Експорт PDF
+        </button>
+    </div>
+
+    <!-- 🎛️ Фільтри -->
+    <div class="glass-card-dark p-4 mb-4">
+        <!-- Рядок 1: Бізнеси + Метрики -->
+        <div class="row g-4 mb-3">
+            <div class="col-md-7">
+                <p class="fw-semibold mb-2 text-uppercase" style="font-size:0.75rem; letter-spacing:1.5px; color: var(--text-muted);">
+                    <i class="bi bi-buildings me-1" style="color:#10b981;"></i> Бізнеси
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var b in businesses)
+                    {
+                        <input type="checkbox" class="btn-check btn-check-custom business-check" id="b_@b.Id" value="@b.Id" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary m-0" for="b_@b.Id">@b.Name</label>
+                    }
+                </div>
+            </div>
+            <div class="col-md-5">
+                <p class="fw-semibold mb-2 text-uppercase" style="font-size:0.75rem; letter-spacing:1.5px; color: var(--text-muted);">
+                    <i class="bi bi-bar-chart-line me-1" style="color:#3b82f6;"></i> Метрики
+                </p>
+                @{
+                    var metrics = new List<string> { "Прибуток", "Оборот", "Витрати", "Середній чек" };
+                }
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var m in metrics)
+                    {
+                        <input type="checkbox" class="btn-check btn-check-custom metric-check" id="m_@m" value="@m" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary m-0" for="m_@m">@m</label>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <hr style="border-color: rgba(255,255,255,0.07); margin: 0 0 1rem 0;">
+
+        <!-- Рядок 2: Дати + Кнопка -->
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 140px;">
+                <span class="text-muted small fw-medium" style="white-space:nowrap;">З</span>
+                <input type="date" id="startDate" class="form-control form-control-sm rounded-3 w-100">
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 140px;">
+                <span class="text-muted small fw-medium" style="white-space:nowrap;">По</span>
+                <input type="date" id="endDate" class="form-control form-control-sm rounded-3 w-100">
+            </div>
+            <button id="loadDataBtn" class="btn rounded-pill fw-bold text-dark px-4 shadow-lg flex-grow-1 mt-2 mt-md-0" style="background: linear-gradient(90deg, #10b981, #3b82f6); border:none; white-space:nowrap; min-width: 200px;">
+                <i class="bi bi-cpu me-2"></i> Обробити дані
+            </button>
+        </div>
+    </div>
+
+    <!-- 📊 Grid Layout -->
+    <div class="dashboard-grid mb-4">
+        
+        <!-- 📈 1. Динаміка прибутку (Великий лінійний графік) -->
+        <div class="glass-card-dark p-4 grid-full d-flex flex-column">
+            <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#10b981;">●</span> Динаміка прибутку у часі</h5>
+            <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 🕸️ 2. Радар Метрик (Radar Chart) -->
+        <div class="glass-card-dark p-4 grid-one-third d-flex flex-column">
+            <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#8b5cf6;">●</span> Баланс Метрик (Радар)</h5>
+            <div class="chart-container chart-container-sm">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <p class="text-muted small text-center mt-3 mb-0">Порівняння бізнесів за всіма обраними показниками.</p>
+        </div>
+
+        <!-- 📊 3. Порівняння метрик (Bar Chart) -->
+        <div class="glass-card-dark p-4 grid-two-thirds d-flex flex-column">
+            <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#3b82f6;">●</span> Абсолютні показники</h5>
+            <div class="chart-container chart-container-sm">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 🍩 4. Розподіл по категоріях (Doughnut) -->
+        <div class="glass-card-dark p-4 grid-half d-flex flex-column">
+            <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#f59e0b;">●</span> Розподіл за категоріями</h5>
+            <div id="categoryChartsContainer" class="row g-3 overflow-auto" style="max-height: 400px;">
+                <div class="text-center text-muted py-5 w-100"><span class="spinner-grow spinner-grow-sm text-secondary"></span></div>
+            </div>
+        </div>
+
+        <!-- 🌀 5. Polar Area (Порівняння оборотів) -->
+        <div class="glass-card-dark p-4 grid-half d-flex flex-column">
+            <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#ec4899;">●</span> Частка ринку (Оборот)</h5>
+            <div class="chart-container chart-container-sm">
+                <canvas id="polarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 🏆 6. Таблиця лідерів -->
+        <div id="topDataContainer" class="glass-card-dark p-0 overflow-hidden grid-full">
+            <div class="p-4 border-bottom border-secondary border-opacity-25">
+                <h5 class="fw-bold mb-0" style="color: var(--text-main, #f8fafc);"><i class="bi bi-trophy text-warning me-2"></i>Топ товарів та категорій</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Бізнес</th>
+                            <th>Найкращий товар / послуга</th>
+                            <th>Найуспішніша категорія</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topDataBody" class="border-top-0">
+                        <tr><td colspan="3" class="text-center text-muted py-4">Немає даних</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💡 ШІ Поради (Premium) -->
+    @if (User.IsInRole("ProUser") || true)
+    {
+        <div id="tipsContainer" class="glass-card-dark p-4 border border-info border-opacity-25">
+            <div class="d-flex align-items-center mb-4">
+                <div class="rounded-circle p-2 me-3" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">
+                    <i class="bi bi-robot fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-white mb-1">ШІ-Аналітика</h5>
+                    <p class="text-muted mb-0 small">Синтезовані інсайти на основі даних</p>
+                </div>
+            </div>
+            <div class="row g-3" id="tipsList">
+                <!-- Поради -->
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    // 🌌 GLOBAL DARK THEME DEFAULTS FOR CHART.JS
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#94a3b8'; // Slate 400
+    
+    // Tooltips
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)'; // Slate 900
+    Chart.defaults.plugins.tooltip.titleColor = '#f8fafc';
+    Chart.defaults.plugins.tooltip.bodyColor = '#cbd5e1';
+    Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.1)';
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.padding = 12;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.tooltip.displayColors = true;
+
+    // Grid lines
+    Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
+    Chart.defaults.scale.ticks.color = '#94a3b8';
+
+    let chartInstance = null;
+    let lineInstance = null;
+    let radarInstance = null;
+    let polarInstance = null;
+    let categoryCharts = {};
+
+    // 🎨 CYBERPUNK NEON COLOR PALETTE
+    const neonPalette = [
+        { name: 'Green', rgb: '16, 185, 129', hex: '#10b981' },
+        { name: 'Blue', rgb: '59, 130, 246', hex: '#3b82f6' },
+        { name: 'Purple', rgb: '139, 92, 246', hex: '#8b5cf6' },
+        { name: 'Pink', rgb: '236, 72, 153', hex: '#ec4899' },
+        { name: 'Yellow', rgb: '245, 158, 11', hex: '#f59e0b' },
+        { name: 'Cyan', rgb: '6, 182, 212', hex: '#06b6d4' }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const endDateInput = document.getElementById('endDate');
+        const startDateInput = document.getElementById('startDate');
+
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        const formatDate = (date) => date.toISOString().split('T')[0];
+
+        startDateInput.value = formatDate(thirtyDaysAgo);
+        endDateInput.value = formatDate(today);
+
+        // Auto load on start
+        setTimeout(() => document.getElementById('loadDataBtn').click(), 200);
+    });
+
+    document.getElementById('loadDataBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('loadDataBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Аналіз...';
+        btn.disabled = true;
+
+        const businessIds = Array.from(document.querySelectorAll('.business-check:checked')).map(c => c.value);
+        const selectedMetrics = Array.from(document.querySelectorAll('.metric-check:checked')).map(c => c.value);
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (!businessIds.length || !selectedMetrics.length || !startDate || !endDate) {
+            alert("Помилка: Виберіть хоча б 1 бізнес, 1 метрику та вкажіть період.");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("GetAnalyticsData", "Analytics")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ businessIds, selectedMetrics, startDate, endDate })
+            });
+
+            if (!response.ok) throw new Error("Server Error");
+            const data = await response.json();
+            
+            renderLineChart(data);
+            renderBarChart(data);
+            renderRadarChart(data, selectedMetrics);
+            renderPolarChart(data);
+            renderCategoryCharts(data.categoryDistribution);
+            renderTable(data);
+
+            // Tips
+            const tipsResponse = await fetch('@Url.Action("GetUserTips", "Analytics")');
+            if (tipsResponse.ok) {
+                const tips = await tipsResponse.json();
+                renderTips(tips);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // 1. Динаміка прибутку (Line)
+    function renderLineChart(data) {
+        const ctx = document.getElementById('lineChart').getContext('2d');
+        const datasets = [];
+        let bIndex = 0;
+        
+        for (const businessId in data.profitTrends) {
+            const trend = data.profitTrends[businessId];
+            const color = neonPalette[bIndex % neonPalette.length];
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, `rgba(${color.rgb}, 0.5)`);
+            gradient.addColorStop(1, `rgba(${color.rgb}, 0.0)`);
+
+            datasets.push({
+                label: data.businesses.find(b => b.businessId === businessId).businessName,
+                data: trend.map(p => ({ x: p.date, y: p.profit })),
+                borderColor: color.hex,
+                backgroundColor: gradient,
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#0f172a',
+                pointBorderColor: color.hex,
+                pointBorderWidth: 2,
+                pointRadius: 0, // hide dots unless hovered
+                pointHoverRadius: 6
+            });
+            bIndex++;
+        }
+
+        if (lineInstance) lineInstance.destroy();
+        lineInstance = new Chart(ctx, {
+            type: 'line',
+            data: { datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+                scales: { 
+                    x: { type: 'time', time: { unit: 'day' } }, 
+                    y: { beginAtZero: true } 
+                }
+            }
+        });
+    }
+
+    // 2. Порівняння метрик (Bar)
+    function renderBarChart(data) {
+        const ctx = document.getElementById('analyticsChart').getContext('2d');
+        const labels = data.businesses.map(b => b.businessName);
+        const metricNames = Object.keys(data.businesses[0].metrics);
+        
+        const datasets = metricNames.map((metric, i) => {
+            const color = neonPalette[i % neonPalette.length];
+            
+            const gradient = ctx.createLinearGradient(0, 400, 0, 0);
+            gradient.addColorStop(0, `rgba(${color.rgb}, 0.1)`);
+            gradient.addColorStop(1, `rgba(${color.rgb}, 0.8)`);
+
+            return {
+                label: metric,
+                data: data.businesses.map(b => b.metrics[metric]),
+                backgroundColor: gradient,
+                borderColor: color.hex,
+                borderWidth: { top: 2, right: 0, bottom: 0, left: 0 },
+                borderRadius: 4,
+                barPercentage: 0.6,
+                categoryPercentage: 0.8
+            };
+        });
+
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+                scales: { 
+                    y: { beginAtZero: true },
+                    x: { grid: { display: false } }
+                } 
+            }
+        });
+    }
+
+    // 3. Радар Метрик (Radar)
+    function renderRadarChart(data, selectedMetrics) {
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        
+        // Normalize data so they can be compared on the same scale (0-100%)
+        const maxValues = {};
+        selectedMetrics.forEach(m => {
+            maxValues[m] = Math.max(...data.businesses.map(b => b.metrics[m] || 0), 1); // prevent div by 0
+        });
+
+        const datasets = data.businesses.map((b, i) => {
+            const color = neonPalette[i % neonPalette.length];
+            const normalizedData = selectedMetrics.map(m => ((b.metrics[m] || 0) / maxValues[m]) * 100);
+
+            return {
+                label: b.businessName,
+                data: normalizedData,
+                backgroundColor: `rgba(${color.rgb}, 0.2)`,
+                borderColor: color.hex,
+                pointBackgroundColor: color.hex,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: color.hex,
+                borderWidth: 2,
+            };
+        });
+
+        if (radarInstance) radarInstance.destroy();
+        radarInstance = new Chart(ctx, {
+            type: 'radar',
+            data: { labels: selectedMetrics, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        pointLabels: { color: '#cbd5e1', font: { size: 12 } },
+                        ticks: { display: false, min: 0, max: 100 } // Hide numbers, just show shape
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                // Show original value in tooltip
+                                const metricName = context.chart.data.labels[context.dataIndex];
+                                const originalValue = data.businesses[context.datasetIndex].metrics[metricName];
+                                return `${context.dataset.label}: ${originalValue.toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 4. Частка ринку (Polar Area) - Uses first metric (e.g. Оборот or Прибуток)
+    function renderPolarChart(data) {
+        const ctx = document.getElementById('polarChart').getContext('2d');
+        const labels = data.businesses.map(b => b.businessName);
+        
+        // Grab the first metric for comparison
+        const targetMetric = Object.keys(data.businesses[0].metrics)[0];
+        const chartData = data.businesses.map(b => b.metrics[targetMetric] || 0);
+        
+        const backgroundColors = data.businesses.map((_, i) => `rgba(${neonPalette[i % neonPalette.length].rgb}, 0.6)`);
+        const borderColors = data.businesses.map((_, i) => neonPalette[i % neonPalette.length].hex);
+
+        if (polarInstance) polarInstance.destroy();
+        polarInstance = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels,
+                datasets: [{
+                    label: targetMetric,
+                    data: chartData,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { display: false, backdropColor: 'transparent' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'right', labels: { usePointStyle: true, color: '#cbd5e1' } },
+                    title: { display: true, text: `Основа: ${targetMetric}`, color: '#94a3b8' }
+                }
+            }
+        });
+    }
+
+    // 5. Розподіл по категоріях (Doughnut)
+    function renderCategoryCharts(categoryDistribution) {
+        const container = document.getElementById('categoryChartsContainer');
+        container.innerHTML = '';
+
+        const keys = Object.keys(categoryDistribution);
+        if (keys.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-4 w-100">Немає даних</div>';
+            return;
+        }
+
+        keys.forEach((businessId, i) => {
+            const dist = categoryDistribution[businessId];
+            const canvasId = `pie_${businessId}`;
+            
+            const col = document.createElement('div');
+            col.className = keys.length > 1 ? 'col-md-6' : 'col-12';
+
+            col.innerHTML = `
+                <div class="rounded-3 p-3 h-100" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                    <h6 class="fw-semibold text-center mb-3 text-white small">${dist.businessName}</h6>
+                    <div style="height: 200px; position:relative;">
+                        <canvas id="${canvasId}"></canvas>
+                    </div>
+                </div>
+            `;
+            container.appendChild(col);
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (categoryCharts[businessId]) categoryCharts[businessId].destroy();
+
+            const pieColors = Object.keys(dist.data).map((_, idx) => neonPalette[idx % neonPalette.length].hex);
+
+            categoryCharts[businessId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(dist.data),
+                    datasets: [{ 
+                        data: Object.values(dist.data), 
+                        backgroundColor: pieColors,
+                        borderWidth: 2,
+                        borderColor: '#0f172a',
+                        hoverOffset: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    cutout: '75%', // Modern thin ring
+                    plugins: {
+                        legend: { display: false } // Hide legend to save space
+                    }
+                }
+            });
+        });
+    }
+
+    // 6. Таблиця лідерів
+    function renderTable(data) {
+        const tableBody = document.getElementById('topDataBody');
+        tableBody.innerHTML = '';
+        
+        if (data.businesses.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Немає даних</td></tr>';
+            return;
+        }
+
+        data.businesses.forEach(b => {
+            const row = `<tr>
+                    <td class="ps-4 fw-bold text-white">
+                        <div class="d-flex align-items-center">
+                            <span style="color:#3b82f6;" class="me-2">⚡</span>
+                            ${b.businessName}
+                        </div>
+                    </td>
+                    <td><span class="badge-neon rounded-pill">${data.topProducts[b.businessId] || '—'}</span></td>
+                    <td><span class="badge-neon rounded-pill">${data.topCategories[b.businessId] || '—'}</span></td>
+                </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    // ШІ Поради
+    function renderTips(tips) {
+        const list = document.getElementById('tipsList');
+        list.innerHTML = '';
+        
+        if (!tips || tips.length === 0) {
+            list.innerHTML = '<div class="col-12"><p class="text-muted mb-0">Даних недостатньо для аналізу.</p></div>';
+            return;
+        }
+
+        tips.forEach(t => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4';
+            col.innerHTML = `
+                <div class="rounded-3 p-3 h-100 d-flex align-items-start" style="background: rgba(14, 165, 233, 0.05); border-left: 3px solid #0ea5e9;">
+                    <i class="bi bi-stars text-info fs-5 me-2 mt-n1"></i>
+                    <p class="mb-0 text-light small">${t}</p>
+                </div>
+            `;
+            list.appendChild(col);
+        });
+    }
+
+    // PDF Export
+    document.getElementById('savePdfBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('savePdfBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Генерація...';
+        btn.disabled = true;
+
+        const businessIds = Array.from(document.querySelectorAll('.business-check:checked')).map(c => c.value);
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (!businessIds.length || !startDate || !endDate) {
+            alert("Помилка: Виберіть хоча б 1 бізнес та вкажіть період.");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        try {
+            const response = await fetch('@Url.Action("GeneratePdf", "Analytics")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ businessIds, startDate, endDate })
+            });
+
+            if (!response.ok) throw new Error("Помилка генерації PDF");
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `FinancialReport_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error(e);
+            alert("Сталася помилка при завантаженні PDF.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+</script>
+}

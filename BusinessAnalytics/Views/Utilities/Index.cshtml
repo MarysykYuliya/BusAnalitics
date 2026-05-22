@@ -1,0 +1,346 @@
+@model List<BusinessAnalytics.Models.Entities.Premises>
+@{
+    ViewData["Title"] = "Операційні витрати";
+    var businesses = ViewBag.Businesses as List<BusinessAnalytics.Models.Entities.BusinessAccount> ?? new();
+    var selectedId = ViewBag.SelectedBusinessId as Guid?;
+    var utilityTypes = ViewBag.UtilityTypes as List<BusinessAnalytics.Models.Entities.UtilityType> ?? new();
+    var currentMonth = (int)(ViewBag.CurrentMonth ?? DateTime.Now.Month);
+    var currentYear = (int)(ViewBag.CurrentYear ?? DateTime.Now.Year);
+    var monthNames = new[] { "", "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+        "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень" };
+}
+
+<h2 class="page-title"><i class="bi bi-wallet2 me-2" style="color: var(--neon-green);"></i>Операційні витрати</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="mb-3 p-3 rounded-3 fw-semibold" style="background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3); color: var(--neon-green);">
+        @TempData["Success"]
+    </div>
+}
+
+<!-- Business selector + Month picker -->
+<div class="glass-card p-4 mb-4">
+    <form method="get" class="d-flex align-items-end gap-3 flex-wrap">
+        <div class="flex-grow-1">
+            <label class="form-label text-muted small">Оберіть бізнес</label>
+            <select name="businessId" class="form-select" onchange="this.form.submit()">
+                <option value="">— Оберіть бізнес —</option>
+                @foreach (var b in businesses)
+                {
+                    <option value="@b.Id" selected="@(selectedId == b.Id)">@b.Name</option>
+                }
+            </select>
+        </div>
+        @if (selectedId.HasValue)
+        {
+            <div>
+                <label class="form-label text-muted small">Місяць</label>
+                <select name="month" class="form-select" onchange="this.form.submit()" style="min-width: 150px;">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" selected="@(m == currentMonth)">@monthNames[m]</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="form-label text-muted small">Рік</label>
+                <select name="year" class="form-select" onchange="this.form.submit()" style="min-width: 100px;">
+                    @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                    {
+                        <option value="@y" selected="@(y == currentYear)">@y</option>
+                    }
+                </select>
+            </div>
+        }
+    </form>
+</div>
+
+@if (selectedId.HasValue)
+{
+    <!-- Management buttons row -->
+    <div class="d-flex gap-3 mb-4 flex-wrap">
+        <!-- Add Premises -->
+        <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addPremisesModal">
+            <i class="bi bi-plus-circle me-1"></i> Додати об'єкт / філію
+        </button>
+        <!-- Add Utility Type -->
+        <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+            <i class="bi bi-tags me-1"></i> Додати статтю витрат
+        </button>
+    </div>
+
+    @if (!Model.Any() && !utilityTypes.Any())
+    {
+        <div class="glass-card p-5 text-center">
+            <div style="font-size: 3rem; opacity: 0.4; margin-bottom: 1rem;">🏢</div>
+            <p class="text-muted mb-0">Додайте об'єкти та статті витрат, щоб почати вводити операційні витрати.</p>
+        </div>
+    }
+    else if (Model.Any() && utilityTypes.Any())
+    {
+        <!-- MAIN TABLE: Premises x UtilityTypes for current month -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-main mb-0">
+                    📅 @monthNames[currentMonth] @currentYear
+                </h5>
+                <span class="text-muted small">
+                    Всього: <strong style="color: var(--neon-green);">@Model.Sum(p => p.UtilityRecords.Where(r => r.Month == currentMonth && r.Year == currentYear).Sum(r => r.Amount)).ToString("N2") ₴</strong>
+                </span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-modern mb-0">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 180px;">Об'єкт / Філія</th>
+                            @foreach (var ut in utilityTypes)
+                            {
+                                <th class="text-center" style="min-width: 140px;">
+                                    @ut.Name
+                                </th>
+                            }
+                            <th class="text-end" style="min-width: 100px;">Разом</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var premises in Model)
+                        {
+                            var premisesRecords = premises.UtilityRecords
+                                .Where(r => r.Month == currentMonth && r.Year == currentYear).ToList();
+                            var premisesTotal = premisesRecords.Sum(r => r.Amount);
+
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold text-main">@premises.Name</div>
+                                    @if (!string.IsNullOrEmpty(premises.Address))
+                                    {
+                                        <small class="text-muted">@premises.Address</small>
+                                    }
+                                </td>
+                                @foreach (var ut in utilityTypes)
+                                {
+                                    var record = premisesRecords.FirstOrDefault(r => r.UtilityTypeId == ut.Id);
+                                    <td class="text-center align-middle">
+                                        @if (record != null)
+                                        {
+                                            <div class="d-flex flex-column align-items-center gap-1">
+                                                <span class="fw-bold" style="color: @(record.IsPaid ? "var(--neon-green)" : "#fbbf24");">
+                                                    @record.Amount.ToString("N2") ₴
+                                                </span>
+                                                @if (record.IsPaid)
+                                                {
+                                                    <span class="small" style="color: var(--neon-green);"><i class="bi bi-check-circle-fill"></i> Оплачено</span>
+                                                    <form asp-action="MarkUnpaid" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@record.Id" />
+                                                        <input type="hidden" name="businessId" value="@selectedId" />
+                                                        <button type="submit" class="btn btn-link btn-sm p-0 text-muted small"
+                                                                onclick="return confirm('Скасувати оплату?')">скасувати</button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <form asp-action="MarkPaid" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@record.Id" />
+                                                        <input type="hidden" name="businessId" value="@selectedId" />
+                                                        <button type="submit" class="btn btn-link btn-sm p-0" style="color: var(--neon-green); font-size: 0.8rem;">
+                                                            <i class="bi bi-check2-square"></i> Оплатити
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-link btn-sm text-muted p-0"
+                                                    data-bs-toggle="modal" data-bs-target="#addRecordModal"
+                                                    onclick="setRecordData('@premises.Id','@ut.Id','@premises.Name','@ut.Name')">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                }
+                                <td class="text-end fw-bold" style="color: var(--neon-green);">
+                                    @premisesTotal.ToString("N2") ₴
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- One of them is missing -->
+        <div class="glass-card p-4 mb-4 text-center">
+            <div style="font-size: 2rem; opacity: 0.5; margin-bottom: 0.5rem;">
+                @(Model.Any() ? "💡" : "🏢")
+            </div>
+            <p class="text-muted mb-0">
+                @(Model.Any()
+                    ? "Додайте статті витрат (Закупка, Оренда, Зарплата…), щоб побачити таблицю витрат."
+                    : "Додайте об'єкт або філію, щоб почати вводити витрати.")
+            </p>
+        </div>
+    }
+
+    <!-- Management lists — ALWAYS visible when business selected -->
+    <div class="d-flex gap-4 flex-wrap mt-4">
+        <div class="glass-card p-3 flex-grow-1" style="min-width: 250px;">
+            <h6 class="fw-bold text-muted small text-uppercase mb-3">🏢 Об'єкти (@Model.Count)</h6>
+            @if (Model.Any())
+            {
+                @foreach (var p in Model)
+                {
+                    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <span class="text-main small fw-semibold">@p.Name</span>
+                            @if (!string.IsNullOrEmpty(p.Address))
+                            {
+                                <br/><small class="text-muted">@p.Address</small>
+                            }
+                        </div>
+                        <form asp-action="DeletePremises" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@p.Id" />
+                            <input type="hidden" name="businessId" value="@selectedId" />
+                            <button class="btn btn-link btn-sm p-0" style="color: #ef4444; font-size: 0.75rem;"
+                                    onclick="return confirm('Видалити об\'єкт @p.Name?')"><i class="bi bi-trash3"></i></button>
+                        </form>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted small mb-0">Ще немає об'єктів</p>
+            }
+        </div>
+        <div class="glass-card p-3 flex-grow-1" style="min-width: 250px;">
+            <h6 class="fw-bold text-muted small text-uppercase mb-3">🏷 Статті витрат (@utilityTypes.Count)</h6>
+            @if (utilityTypes.Any())
+            {
+                @foreach (var ut in utilityTypes)
+                {
+                    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <span class="text-main small">@ut.Name</span>
+                        <form asp-action="DeleteUtilityType" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@ut.Id" />
+                            <input type="hidden" name="businessId" value="@selectedId" />
+                            <button class="btn btn-link btn-sm p-0" style="color: #ef4444; font-size: 0.75rem;"
+                                    onclick="return confirm('Видалити статтю @ut.Name?')"><i class="bi bi-trash3"></i></button>
+                        </form>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted small mb-0">Ще немає статей витрат</p>
+            }
+        </div>
+    </div>
+
+    <!-- Modal: Add Premises -->
+    <div class="modal fade" id="addPremisesModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: var(--space-surface); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-main fw-bold">🏢 Новий об'єкт</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="CreatePremises" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="businessId" value="@selectedId" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Назва</label>
+                            <input type="text" name="name" class="form-control" placeholder="Офіс на Шевченка" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Адреса (необов'язково)</label>
+                            <input type="text" name="address" class="form-control" placeholder="м. Київ, вул. Шевченка 1" />
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn-modern btn-modern-primary">Додати</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Utility Type -->
+    <div class="modal fade" id="addTypeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: var(--space-surface); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-main fw-bold">🏷 Нова стаття витрат</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="CreateUtilityType" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="businessId" value="@selectedId" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Назва</label>
+                            <input type="text" name="name" class="form-control" placeholder="Електроенергія" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn-modern btn-modern-primary">Додати</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Record -->
+    <div class="modal fade" id="addRecordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: var(--space-surface); border: 1px solid var(--glass-border);">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-main fw-bold">💰 Ввести суму</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="SaveRecord" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="businessId" value="@selectedId" />
+                    <input type="hidden" name="premisesId" id="recordPremisesId" />
+                    <input type="hidden" name="utilityTypeId" id="recordUtilityTypeId" />
+                    <input type="hidden" name="year" value="@currentYear" />
+                    <input type="hidden" name="month" value="@currentMonth" />
+                    <div class="modal-body">
+                        <p class="text-muted small mb-3">
+                            <span id="recordLabel"></span> — @monthNames[currentMonth] @currentYear
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label">Сума (₴)</label>
+                            <input type="number" name="amount" class="form-control" step="0.01" min="0" placeholder="0.00" required autofocus />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Коментар (необов'язково)</label>
+                            <input type="text" name="note" class="form-control" placeholder="Показники лічильника тощо" />
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn-modern btn-modern-primary">Зберегти</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function setRecordData(premisesId, utilityTypeId, premisesName, typeName) {
+            document.getElementById('recordPremisesId').value = premisesId;
+            document.getElementById('recordUtilityTypeId').value = utilityTypeId;
+            document.getElementById('recordLabel').textContent = premisesName + ' → ' + typeName;
+        }
+    </script>
+}

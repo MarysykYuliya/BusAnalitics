@@ -1,0 +1,111 @@
+﻿@model BusinessAnalytics.Models.Entities.Transaction
+@{
+    ViewData["Title"] = "Редагувати транзакцію";
+    var businessId = ViewBag.BusinessId;
+    var categories = ViewBag.Categories;
+    var selectedCategoryId = ViewBag.SelectedCategoryId;
+    var products = ViewBag.Products;
+}
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h4>@ViewData["Title"]</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" name="businessId" value="@businessId" />
+
+            <div class="mb-3">
+                <label asp-for="TransactionType" class="form-label"></label>
+                <select asp-for="TransactionType" class="form-select">
+                    <option value="1" selected="@(Model.TransactionType == BusinessAnalytics.Models.Entities.TransactionType.Income ? "selected" : null)">Прибуток</option>
+                    <option value="2" selected="@(Model.TransactionType == BusinessAnalytics.Models.Entities.TransactionType.Expense ? "selected" : null)">Витрати</option>
+                </select>
+            </div>
+
+           <div class="mb-3">
+    <label class="form-label">Категорія</label>
+    <select id="categorySelect" class="form-select">
+        <option value="">-- Оберіть категорію --</option>
+        @foreach (var c in categories)
+        {
+                        if (selectedCategoryId == c.Id)
+                        {
+                            <option value="@c.Id" selected>@c.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+        }
+    </select>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Продукт / Витрата</label>
+    <select asp-for="ProductId" class="form-select" id="productSelect">
+        <option value="">-- Оберіть продукт --</option>
+        @if (products != null)
+        {
+            foreach (var p in products)
+            {
+                if (Model.ProductId == p.Id)
+                {
+                    <option value="@p.Id" selected>@p.Name</option>
+                }
+                else
+                {
+                    <option value="@p.Id">@p.Name</option>
+                }
+            }
+        }
+    </select>
+</div>
+
+            <div class="mb-3">
+                <label asp-for="Quantity" class="form-label"></label>
+                <input asp-for="Quantity" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="UnitPrice" class="form-label"></label>
+                <input asp-for="UnitPrice" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success">Зберегти</button>
+            <a asp-action="Index" asp-route-businessId="@businessId" class="btn btn-secondary">Назад</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('categorySelect').addEventListener('change', function () {
+        const categoryId = this.value;
+        const productSelect = document.getElementById('productSelect');
+        productSelect.innerHTML = '<option>Завантаження...</option>';
+
+        fetch('@Url.Action("GetProductsByCategory", "Transaction")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId: "@businessId", categoryId: categoryId })
+        })
+        .then(r => r.json())
+        .then(products => {
+            productSelect.innerHTML = '<option value="">-- Оберіть продукт --</option>';
+            products.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.text = p.name;
+                productSelect.add(opt);
+            });
+        });
+    });
+</script>
+}

@@ -1,0 +1,98 @@
+@model List<BusinessAnalytics.Models.Entities.ProductCategory>
+
+@{
+    ViewData["Title"] = "Категорії";
+    var businesses = ViewBag.Businesses as List<BusinessAnalytics.Models.Entities.BusinessAccount>;
+    var selectedBusinessId = (Guid?)ViewBag.SelectedBusinessId;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <div>
+        <h2 class="page-title mb-1">@ViewData["Title"]</h2>
+        <p class="text-muted">Управління категоріями товарів та послуг</p>
+    </div>
+    <a asp-action="Create" asp-route-businessId="@selectedBusinessId" class="btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle"></i> Додати категорію
+    </a>
+</div>
+
+<div class="glass-card mb-4 p-4">
+    <div class="d-flex align-items-center gap-3">
+        <label class="form-label mb-0 text-nowrap">Оберіть бізнес:</label>
+        <div style="min-width: 250px;">
+            <select id="businessSelect" class="form-select w-100">
+                @foreach (var b in businesses)
+                {
+                    <option value="@b.Id" selected="@(selectedBusinessId == b.Id)">
+                        @b.Name
+                    </option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card p-0 overflow-hidden">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-modern table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Назва категорії</th>
+                        <th>Опис</th>
+                        <th class="text-center pe-4">Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-medium text-main">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px; background: rgba(0,255,136,0.1); color: var(--neon-green);">
+                                        <i class="bi bi-tags"></i>
+                                    </div>
+                                    @c.Name
+                                </div>
+                            </td>
+                            <td class="text-muted">@(string.IsNullOrEmpty(c.Description) ? "—" : c.Description)</td>
+                            <td class="text-center pe-4">
+                                <div class="d-inline-flex gap-2">
+                                    <a asp-action="Edit" asp-route-id="@c.Id" asp-route-businessId="@selectedBusinessId"
+                                       class="btn-modern p-2" title="Редагувати" style="font-size: 0.9rem;">
+                                        <i class="bi bi-pencil-square" style="color: var(--neon-green);"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@c.Id" asp-route-businessId="@selectedBusinessId"
+                                          method="post" class="m-0">
+                                        <button type="submit" class="btn-modern p-2 bg-danger" title="Видалити"
+                                                onclick="return confirm('Видалити категорію?')" style="font-size: 0.9rem;">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-tags text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+            <h5 class="fw-bold text-main">Немає категорій</h5>
+            <p class="text-muted">Не знайдено категорій для обраного бізнесу.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('businessSelect').addEventListener('change', function () {
+            const businessId = this.value;
+            window.location.href = '@Url.Action("Index", "ProductCategory")?businessId=' + businessId;
+        });
+    </script>
+}

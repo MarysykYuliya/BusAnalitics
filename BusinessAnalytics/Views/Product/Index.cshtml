@@ -1,0 +1,177 @@
+@model IEnumerable<BusinessAnalytics.Models.Entities.Product>
+
+@{
+    ViewData["Title"] = "Продукти та послуги";
+    var businesses = ViewBag.Businesses as List<BusinessAnalytics.Models.Entities.BusinessAccount>;
+    var selectedBusinessId = ViewBag.SelectedBusinessId as Guid?;
+    var categories = ViewBag.Categories as List<BusinessAnalytics.Models.Entities.ProductCategory>;
+    var selectedCategoryId = ViewBag.SelectedCategoryId as Guid?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+    <div>
+        <h2 class="page-title mb-1">@ViewData["Title"]</h2>
+        <p class="text-muted">Керуйте своїм каталогом товарів та послуг</p>
+    </div>
+    <a id="createBtn" class="btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle"></i> Додати продукт
+    </a>
+</div>
+
+<div class="glass-card mb-4 p-4">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Оберіть бізнес</label>
+            <select id="businessSelect" class="form-select">
+                <option value="">-- Оберіть бізнес --</option>
+                @if (businesses != null)
+                {
+                    foreach (var b in businesses)
+                    {
+                        <option value="@b.Id" selected="@(selectedBusinessId == b.Id)">
+                            @b.Name
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Категорія</label>
+            <select id="categorySelect" class="form-select">
+                <option value="">-- Усі категорії --</option>
+                @if (categories != null)
+                {
+                    foreach (var c in categories)
+                    {
+                        <option value="@c.Id" selected="@(selectedCategoryId == c.Id)">
+                            @c.Name
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card p-0 overflow-hidden" id="productsContainer">
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-modern table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Назва</th>
+                        <th>Тип</th>
+                        <th>Категорія</th>
+                        <th class="text-end">Собівартість</th>
+                        <th class="text-end">Кінцева ціна</th>
+                        <th class="text-center pe-4">Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-medium text-main">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: rgba(0,255,136,0.1); color: var(--neon-green);">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+                                    @item.Name
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-neon">@item.Type</span>
+                            </td>
+                            <td class="text-muted">@(item.ProductCategory?.Name ?? "—")</td>
+                            <td class="text-end fw-medium text-muted">@item.CostPrice.ToString("0.00") ₴</td>
+                            <td class="text-end fw-bold" style="color: var(--neon-green);">@item.FinalPrice.ToString("0.00") ₴</td>
+                            <td class="text-center pe-4">
+                                <div class="d-inline-flex gap-2">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" asp-route-businessId="@item.BusinessAccountId"
+                                       class="btn-modern p-2" title="Редагувати" style="font-size: 0.9rem;">
+                                        <i class="bi bi-pencil-square" style="color: var(--neon-green);"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@item.Id" asp-route-businessId="@item.BusinessAccountId" method="post" class="m-0">
+                                        <button type="submit" class="btn-modern p-2 bg-danger" title="Видалити"
+                                                onclick="return confirm('Видалити цей продукт?')" style="font-size: 0.9rem;">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inboxes text-muted mb-3 d-block" style="font-size: 3rem;"></i>
+            <h5 class="fw-bold text-main">Немає продуктів</h5>
+            <p class="text-muted">Не знайдено жодного продукту за обраними критеріями.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        const businessSelect = document.getElementById("businessSelect");
+        const categorySelect = document.getElementById("categorySelect");
+        const createBtn = document.getElementById("createBtn");
+
+        function updateCreateLink() {
+            const businessId = businessSelect.value;
+            createBtn.href = businessId ? `/Product/Create?businessId=${businessId}` : "#";
+            if (!businessId) {
+                createBtn.classList.add("opacity-50", "pointer-events-none");
+            } else {
+                createBtn.classList.remove("opacity-50", "pointer-events-none");
+            }
+        }
+
+        businessSelect.addEventListener("change", () => {
+            const businessId = businessSelect.value;
+            if (!businessId) {
+                categorySelect.innerHTML = '<option value="">-- Усі категорії --</option>';
+                document.getElementById("productsContainer").innerHTML =
+                    '<div class="text-center py-5"><i class="bi bi-building text-muted mb-3 d-block" style="font-size: 3rem;"></i><h5 class="fw-bold text-main">Оберіть бізнес</h5><p class="text-muted">Оберіть бізнес, щоб переглянути продукти.</p></div>';
+                updateCreateLink();
+                return;
+            }
+
+            fetch(`/Product/GetCategoriesByBusiness?businessId=${businessId}`)
+                .then(r => r.json())
+                .then(categories => {
+                    categorySelect.innerHTML = '<option value="">-- Усі категорії --</option>';
+                    categories.forEach(c => {
+                        const opt = document.createElement("option");
+                        opt.value = c.id;
+                        opt.text = c.name;
+                        categorySelect.add(opt);
+                    });
+                    loadProducts();
+                    updateCreateLink();
+                });
+        });
+
+        categorySelect.addEventListener("change", loadProducts);
+
+        function loadProducts() {
+            const businessId = businessSelect.value;
+            const categoryId = categorySelect.value;
+            if (!businessId) return;
+
+            fetch(`/Product/FilterProducts?businessId=${businessId}&categoryId=${categoryId}`)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById("productsContainer").innerHTML = html;
+                });
+        }
+
+        updateCreateLink();
+    </script>
+}

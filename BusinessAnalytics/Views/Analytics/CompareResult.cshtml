@@ -1,0 +1,38 @@
+﻿@using BusinessAnalytics.Models.DTO
+@model CombinedAnalyticsDTO
+@{
+    ViewData["Title"] = "Результати порівняння";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+
+<div class="card shadow-sm">
+    <div class="card-body">
+       
+        <table class="table table-bordered table-hover">
+           
+            <thead>
+            <tr>
+                <th>Бізнес</th>
+                @foreach (var metricName in Model.Businesses.First().Metrics.Keys)
+                {
+                    <th>@metricName</th>
+                }
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var business in Model.Businesses)
+            {
+                <tr>
+                    <td>@business.BusinessName</td>
+                    @foreach (var value in business.Metrics.Values)
+                    {
+                        <td>@value.ToString("C")</td>
+                    }
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "Довідник";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-main fw-bold">Довідник</h1>
+            <p class="text-muted mb-0">Як користуватись системою Business Analytics</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-10 mx-auto">
+            <div class="card glass-card border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-main mb-3"><i class="bi bi-briefcase me-2 text-primary"></i> 1. Мої Бізнеси</h5>
+                    <p class="text-muted">
+                        У цій вкладці ви можете створювати та керувати своїми бізнес-акаунтами. Кожен бізнес — це окрема сутність, до якої прив'язані свої товари, транзакції та аналітика. 
+                        Щоб додати новий бізнес, натисніть <strong>«Новий бізнес»</strong>, заповніть назву та контактні дані.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card glass-card border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-main mb-3"><i class="bi bi-tags me-2 text-success"></i> 2. Категорії та Товари</h5>
+                    <p class="text-muted">
+                        Створіть категорії (наприклад, «Напої», «Електроніка»), щоб легше сортувати ваші товари. 
+                        У вкладці <strong>«Товари»</strong> ви додаєте самі продукти, вказуючи їхню ціну, знижку (якщо є) та прив'язуючи до категорії. 
+                        Це необхідно для того, щоб під час створення транзакцій ви могли вибрати конкретний товар зі списку.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card glass-card border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-main mb-3"><i class="bi bi-cash-coin me-2 text-warning"></i> 3. Транзакції</h5>
+                    <p class="text-muted mb-2">
+                        Тут ви ведете облік ваших фінансів. Транзакції можуть бути двох типів:
+                    </p>
+                    <ul class="text-muted">
+                        <li><strong>Дохід:</strong> гроші, які ви отримуєте від продажу товарів або послуг.</li>
+                        <li><strong>Витрата:</strong> гроші, які ви витрачаєте (закупівлі, зарплати тощо).</li>
+                    </ul>
+                    <p class="text-muted mt-2">
+                        Ви можете створити транзакцію вручну, обравши товари та кількість. Також доступний <strong>імпорт з CSV-файлу</strong>. Якщо при імпорті виникла помилка, ви можете скасувати його (Undo).
+                    </p>
+                </div>
+            </div>
+
+            <div class="card glass-card border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-main mb-3"><i class="bi bi-wallet2 me-2 text-danger"></i> 4. Операційні витрати</h5>
+                    <p class="text-muted">
+                        Тут ви ведете облік регулярних комунальних або операційних витрат по кожному приміщенню (наприклад, оренда, електрика, вода). 
+                        Спочатку створіть <strong>Приміщення</strong> та <strong>Послугу</strong>, а потім щомісяця вносьте суму в таблицю.
+                        Коли ви натискаєте <strong>«Оплачено»</strong>, система автоматично створює транзакцію типу "Витрата".
+                    </p>
+                </div>
+            </div>
+
+            <div class="card glass-card border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-main mb-3"><i class="bi bi-graph-up-arrow me-2 text-info"></i> 5. Аналітика та AI-Консультант</h5>
+                    <p class="text-muted">
+                        У вкладці <strong>«Аналітика»</strong> ви бачите зведену статистику по прибутках, обороту та витратах. Ви можете порівнювати бізнеси між собою, будувати графіки та генерувати PDF-звіти.
+                    </p>
+                    <p class="text-muted">
+                        Вкладка <strong>«AI-Консультант»</strong> <i>(доступно для Pro-користувачів)</i> використовує штучний інтелект, щоб проаналізувати ваші фінансові дані і дати персоналізовані поради щодо збільшення прибутку чи зменшення ризиків.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card glass-card border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-main mb-3"><i class="bi bi-telegram me-2 text-primary"></i> 6. Telegram-бот</h5>
+                    <p class="text-muted">
+                        Щоб отримувати щоденні фінансові звіти на свій телефон, перейдіть до <strong>Профілю</strong> (натиснувши на свій email у верхньому правому куті).
+                        Там у вкладці "Telegram" ви зможете згенерувати посилання і прив'язати свого Telegram-бота до акаунту. Бот також нагадуватиме про неоплачені операційні витрати.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card glass-card border-0 mb-4 mt-5">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-question-circle text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5 class="fw-bold text-main mb-3">Залишилися питання?</h5>
+                    <p class="text-muted small mb-4">
+                        Якщо у вас виникли проблеми з використанням системи або ви знайшли помилку, будь ласка, зв'яжіться з нашою підтримкою.
+                    </p>
+                    <a href="tel:+380673859801" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-telephone"></i> Зателефонувати
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

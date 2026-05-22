@@ -1,0 +1,274 @@
+@{
+    ViewData["Title"] = "Головна — Business Analytics";
+}
+
+<style>
+    .hero-section {
+        position: relative;
+        padding: 8rem 2rem;
+        background: radial-gradient(circle at top right, rgba(0, 255, 136, 0.15), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+        margin-bottom: 4rem;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow-neon);
+    }
+
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        color: var(--text-main);
+        letter-spacing: -1px;
+        text-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-muted);
+        margin-bottom: 3rem;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 5rem;
+    }
+
+    .feature-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(0, 255, 136, 0.1);
+        color: var(--neon-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.4s ease;
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+    }
+
+    .glass-card:hover .feature-icon-wrapper {
+        transform: scale(1.1) rotate(5deg);
+        background: var(--neon-green);
+        color: var(--space-dark);
+        box-shadow: var(--shadow-neon-strong);
+    }
+
+    .feature-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-main);
+    }
+
+    .feature-desc {
+        color: var(--text-muted);
+        line-height: 1.7;
+    }
+
+    .steps-container {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .step-item {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        padding: 2rem;
+        border-radius: var(--radius-lg);
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        transition: all 0.3s ease;
+    }
+
+    .step-item:hover {
+        transform: translateY(-5px);
+        background: rgba(0, 255, 136, 0.05);
+        border-color: var(--glass-border);
+    }
+
+    .step-number {
+        font-size: 4rem;
+        font-weight: 800;
+        color: rgba(0, 255, 136, 0.1);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .step-title {
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--neon-green);
+        position: relative;
+        z-index: 2;
+        margin-bottom: 0.5rem;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, var(--space-card), rgba(0, 255, 136, 0.05));
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow-neon);
+        color: var(--text-main);
+        padding: 5rem 2rem;
+        border-radius: var(--radius-xl);
+        text-align: center;
+        margin-top: 5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 60%);
+        animation: spin 15s linear infinite;
+        z-index: 0;
+    }
+    
+    .cta-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    @@keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="hero-section glass-card">
+    <div class="hero-content">
+        <h1 class="hero-title">Розумна аналітика для вашого <span class="text-gradient">успішного бізнесу</span></h1>
+        <p class="hero-subtitle">Миттєве розуміння фінансів, автоматичні звіти та AI-рекомендації. Перетворіть дані на прибуток вже сьогодні.</p>
+        <div class="d-flex gap-4 justify-content-center">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Dashboard" asp-action="Index" class="btn-modern btn-modern-primary btn-lg px-5 py-3 rounded-pill fs-5">
+                    Перейти до дашборду <i class="bi bi-rocket-takeoff ms-2"></i>
+                </a>
+            }
+            else
+            {
+                <a href="/Account/Register" class="btn-modern btn-modern-primary btn-lg px-5 py-3 rounded-pill fs-5">
+                    Розпочати безкоштовно <i class="bi bi-rocket-takeoff ms-2"></i>
+                </a>
+                <a href="#how-it-works" class="btn-modern btn-lg px-4 py-3 rounded-pill fs-5">
+                    Дізнатися більше
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="text-center mb-5">
+        <h2 class="page-title">Чому обирають нас?</h2>
+        <p class="text-muted fs-5">Інструменти корпоративного рівня, доступні для малого бізнесу.</p>
+    </div>
+
+    <div class="feature-grid">
+        <div class="glass-card">
+            <div class="feature-icon-wrapper">
+                <i class="bi bi-robot"></i>
+            </div>
+            <h3 class="feature-title">AI-Консультант</h3>
+            <p class="feature-desc">Отримуйте персоналізовані поради щодо збільшення прибутку та оптимізації витрат на основі аналізу ваших даних штучним інтелектом.</p>
+        </div>
+
+        <div class="glass-card">
+            <div class="feature-icon-wrapper">
+                <i class="bi bi-pie-chart-fill"></i>
+            </div>
+            <h3 class="feature-title">Живі Дашборди</h3>
+            <p class="feature-desc">Відстежуйте ключові показники (KPI) в реальному часі. Інтуїтивно зрозумілі графіки, що показують реальну картину вашого бізнесу.</p>
+        </div>
+
+        <div class="glass-card">
+            <div class="feature-icon-wrapper">
+                <i class="bi bi-file-earmark-pdf-fill"></i>
+            </div>
+            <h3 class="feature-title">Генерація Звітів</h3>
+            <p class="feature-desc">Створюйте детальні фінансові звіти у форматі PDF в один клік. Ідеально для інвесторів, партнерів або власного аналізу.</p>
+        </div>
+    </div>
+
+    <div id="how-it-works" class="mt-5 pt-5">
+        <div class="text-center mb-5">
+            <h2 class="page-title">Як це працює</h2>
+            <p class="text-muted fs-5">Простий шлях до повного контролю над фінансами</p>
+        </div>
+
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="step-item">
+                    <div class="step-number">01</div>
+                    <h4 class="step-title">Реєстрація</h4>
+                    <p class="text-muted small mb-0">Створіть акаунт за хвилину та додайте свій перший бізнес.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-item">
+                    <div class="step-number">02</div>
+                    <h4 class="step-title">Внесення даних</h4>
+                    <p class="text-muted small mb-0">Додавайте категорії, товари та фіксуйте щоденні транзакції.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-item">
+                    <div class="step-number">03</div>
+                    <h4 class="step-title">Аналіз</h4>
+                    <p class="text-muted small mb-0">Система автоматично будує графіки та вираховує прибутковість.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-item">
+                    <div class="step-number">04</div>
+                    <h4 class="step-title">Зростання</h4>
+                    <p class="text-muted small mb-0">Застосовуйте поради AI та масштабуйте свій бізнес.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-section">
+        <div class="cta-content">
+            <h2 class="mb-4 fw-bold" style="font-size: 3rem;">Готові вивести бізнес на новий рівень?</h2>
+            <p class="mb-5 text-muted fs-4">Приєднуйтесь до успішних підприємців, які вже використовують нашу платформу.</p>
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <a asp-controller="Dashboard" asp-action="Index"
+                        class="btn-modern btn-modern-primary btn-lg px-5 py-3 rounded-pill fs-4 shadow-lg">
+                            Перейти до дашборду <i class="bi bi-rocket-takeoff ms-2"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="/Account/Register"
+                        class="btn-modern btn-modern-primary btn-lg px-5 py-3 rounded-pill fs-4 shadow-lg">
+                            Створити акаунт <i class="bi bi-chevron-right ms-2"></i>
+                        </a>
+                    }
+        </div>
+    </div>
+</div>

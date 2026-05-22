@@ -1,0 +1,15 @@
+﻿@model BusinessAnalytics.Models.Entities.BusinessAccount
+@{
+    ViewData["Title"] = "Видалити бізнес";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+    <p>Ви впевнені, що хочете видалити бізнес "<strong>@Model.Name</strong>"?</p>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Видалити</button>
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-secondary">Скасувати</a>
+    </form>
+</div>
