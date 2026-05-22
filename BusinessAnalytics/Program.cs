@@ -77,11 +77,12 @@ else
     app.UseHsts();
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    await SeedRoles.Initialize(services); 
-}
+// Тимчасово закоментовано для успішного старту на Render без БД
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//     await SeedRoles.Initialize(services); 
+// }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
