@@ -51,7 +51,6 @@
                     </select>
                 </div>
 
-                <!-- Product Selection Area -->
                 <div class="mb-5">
                     <label class="form-label mb-3 d-block">Вибір товарів</label>
                     <div id="productContainer" class="p-4 rounded-3 text-center" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
@@ -82,7 +81,6 @@
         function onBusinessChange(bizId) {
             if (!bizId) return;
             
-            // Load Categories
             fetch(`/Transaction/GetCategoriesByBusiness?businessId=${bizId}`)
                 .then(r => r.json())
                 .then(data => {

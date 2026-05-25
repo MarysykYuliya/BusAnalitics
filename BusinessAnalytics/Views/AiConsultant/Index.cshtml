@@ -244,7 +244,6 @@
 
 <div class="ai-chat-wrapper">
 
-    <!-- Header -->
     <div class="ai-header">
         <div class="ai-avatar-big">🤖</div>
         <div>
@@ -256,20 +255,16 @@
         </div>
     </div>
 
-    <!-- Chat Card -->
     <div class="glass-card p-4" style="min-height: 500px; display: flex; flex-direction: column;">
 
-        <!-- Chat Messages Area -->
         <div class="chat-area flex-grow-1">
 
             @if (ViewBag.ReportError == "unavailable")
             {
-                <!-- User message -->
                 <div class="msg-user">
                     <div class="msg-user-avatar"><i class="bi bi-person-fill"></i></div>
                     <div class="msg-user-bubble">📊 Проаналізуй фінансові результати мого бізнесу та дай рекомендації.</div>
                 </div>
-                <!-- Error message -->
                 <div class="msg-ai">
                     <div class="msg-ai-avatar">🤖</div>
                     <div class="msg-ai-bubble" style="border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05);">
@@ -299,7 +294,6 @@
             }
             else if (hasReport)
             {
-                <!-- User message -->
                 <div class="msg-user">
                     <div class="msg-user-avatar">
                         <i class="bi bi-person-fill"></i>
@@ -309,7 +303,6 @@
                     </div>
                 </div>
 
-                <!-- AI thinking indicator (shows briefly before content) -->
                 <div class="msg-ai">
                     <div class="msg-ai-avatar">🤖</div>
                     <div class="msg-ai-bubble">
@@ -323,7 +316,6 @@
             }
             else
             {
-                <!-- Placeholder -->
                 <div class="chat-placeholder">
                     <div class="chat-placeholder-icon">🧠</div>
                     <h5 class="text-main mb-1">AI Аналітик готовий до роботи</h5>
@@ -335,7 +327,6 @@
 
         </div>
 
-        <!-- Input Area -->
         <div class="chat-input-area">
             <form asp-action="Generate" asp-controller="AiConsultant" method="post"
                   onsubmit="this.querySelector('.btn-send').classList.add('loading'); this.querySelector('.btn-send span').textContent='Аналізую...'">
@@ -367,7 +358,6 @@
         </div>
     </div>
 
-    <!-- Tips below -->
     <div class="row g-3 mt-2">
         <div class="col-md-4">
             <div class="glass-card p-3 text-center" style="border-color: rgba(0,255,136,0.1);">

@@ -1,0 +1,11 @@
+# Ігноруємо файли з секретами
+BusinessAnalytics/appsettings.json
+BusinessAnalytics/appsettings.Development.json
+
+# Стандартні папки для ігнорування в .NET
+[Bb]in/
+[Oo]bj/
+.idea/
+.vs/
+*.user
+*.suo

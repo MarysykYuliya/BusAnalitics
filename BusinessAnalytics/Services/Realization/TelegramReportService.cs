@@ -9,11 +9,6 @@ using System.Text.Json.Serialization;
 
 namespace BusinessAnalytics.Services.Realization
 {
-    /// <summary>
-    /// Background service that:
-    ///  1. Polls Telegram for incoming messages (to handle /start TOKEN deep links)
-    ///  2. Sends daily business reports to linked users at the configured hour.
-    /// </summary>
     public class TelegramReportService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
@@ -45,7 +40,6 @@ namespace BusinessAnalytics.Services.Realization
 
             _logger.LogInformation("🤖 Telegram Service запущено. Звіт о {Hour}:00 щодня.", _settings.ReportHour);
 
-            // Clear any active webhooks to ensure polling getUpdates works correctly
             try
             {
                 var client = _httpClientFactory.CreateClient();
@@ -57,7 +51,6 @@ namespace BusinessAnalytics.Services.Realization
                 _logger.LogWarning(ex, "⚠️ Не вдалося видалити webhook на старті.");
             }
 
-            // Run polling and daily report timer concurrently
             var pollingTask = RunPollingLoopAsync(stoppingToken);
             var reportTask = RunDailyReportLoopAsync(stoppingToken);
             var reminderTask = RunWeeklyUnpaidExpensesLoopAsync(stoppingToken);
@@ -65,7 +58,6 @@ namespace BusinessAnalytics.Services.Realization
             await Task.WhenAll(pollingTask, reportTask, reminderTask);
         }
 
-        // ─── LOOP 1: Poll for incoming /start TOKEN messages ───────────────────────
 
         private async Task RunPollingLoopAsync(CancellationToken ct)
         {
@@ -115,7 +107,6 @@ namespace BusinessAnalytics.Services.Realization
 
                 if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(chatId)) continue;
 
-                // Handle /start TOKEN
                 if (text.StartsWith("/start"))
                 {
                     var parts = text.Split(' ', 2);
@@ -127,7 +118,6 @@ namespace BusinessAnalytics.Services.Realization
                     }
                     else
                     {
-                        // /start without token — just welcome
                         await SendMessageAsync(chatId,
                             "👋 Вітаю! Щоб прив'язати ваш акаунт Business Analytics, перейдіть у *Профіль → Telegram звіти* та натисніть кнопку «Прив'язати Telegram».",
                             ct);
@@ -166,7 +156,6 @@ namespace BusinessAnalytics.Services.Realization
                 ct);
         }
 
-        // ─── LOOP 2: Daily Report ──────────────────────────────────────────────────
 
         private async Task RunDailyReportLoopAsync(CancellationToken ct)
         {
@@ -229,7 +218,6 @@ namespace BusinessAnalytics.Services.Realization
             }
         }
 
-        // ─── LOOP 3: Weekly Unpaid Expenses Reminder ───────────────────────────────
 
         private async Task RunWeeklyUnpaidExpensesLoopAsync(CancellationToken ct)
         {
@@ -329,7 +317,6 @@ namespace BusinessAnalytics.Services.Realization
             return sb.ToString();
         }
 
-        // ─── Message Builder ───────────────────────────────────────────────────────
 
         private string BuildReportMessage(List<BusinessAccount> businesses, DateTime date, string userEmail = "")
         {
@@ -389,7 +376,6 @@ namespace BusinessAnalytics.Services.Realization
         private static string EscapeMarkdown(string text) =>
             text.Replace("_", "\\_").Replace("*", "\\*").Replace("[", "\\[").Replace("`", "\\`");
 
-        // ─── HTTP Helper ───────────────────────────────────────────────────────────
 
         private async Task SendMessageAsync(string chatId, string text, CancellationToken ct)
         {
@@ -402,7 +388,6 @@ namespace BusinessAnalytics.Services.Realization
                 _logger.LogError("Telegram sendMessage error: {Code}", response.StatusCode);
         }
 
-        // ─── DTO for getUpdates ────────────────────────────────────────────────────
 
         private class TelegramUpdateResponse
         {

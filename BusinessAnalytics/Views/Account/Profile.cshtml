@@ -60,7 +60,6 @@
             </div>
         }
 
-        <!-- Header card -->
         <div class="glass-card p-4 text-center mb-4">
             <div class="profile-avatar">👤</div>
             <h4 class="fw-bold text-main mb-1">@Model.Email</h4>
@@ -70,7 +69,6 @@
             </span>
         </div>
 
-        <!-- Tabs -->
         <div class="profile-tabs">
             <a class="profile-tab @(activeTab == "info" ? "active" : "")" onclick="showTab('info')">
                 <i class="bi bi-person"></i> Інформація
@@ -92,7 +90,6 @@
             </a>
         </div>
 
-        <!-- Info Tab -->
         <div id="tab-info" class="tab-panel glass-card p-4 @(activeTab == "info" ? "active" : "")">
             <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Дані акаунта</h6>
             <div class="info-row">
@@ -112,7 +109,6 @@
             </div>
         </div>
 
-        <!-- Password Tab -->
         <div id="tab-password" class="tab-panel glass-card p-4 @(activeTab == "password" ? "active" : "")">
             <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Зміна пароля</h6>
             @if (TempData["PasswordError"] != null)
@@ -141,7 +137,6 @@
             </form>
         </div>
 
-        <!-- Email Tab -->
         <div id="tab-email" class="tab-panel glass-card p-4 @(activeTab == "email" ? "active" : "")">
             <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Зміна email</h6>
             <div class="mb-3 p-3 rounded-2 small" style="background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.15); color: var(--text-muted);">
@@ -172,7 +167,6 @@
 
         @if (User.IsInRole("ProUser"))
         {
-            <!-- Telegram Tab - ProUser Only -->
             <div id="tab-telegram" class="tab-panel glass-card p-4 @(activeTab == "telegram" ? "active" : "")">
                 <h6 class="fw-bold text-muted mb-3 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">
                     <i class="bi bi-telegram me-1" style="color: var(--neon-green);"></i>Telegram звіти
@@ -180,7 +174,6 @@
 
                 @if (!string.IsNullOrEmpty(Model.TelegramChatId))
                 {
-                    <!-- CONNECTED STATE -->
                     <div class="mb-4 p-4 rounded-3" style="background: rgba(0,255,136,0.06); border: 1px solid rgba(0,255,136,0.2);">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,255,136,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📱</div>
@@ -210,7 +203,6 @@
                 }
                 else if (ViewBag.TelegramDeepLink != null)
                 {
-                    <!-- LINK GENERATED -->
                     <div class="mb-4 p-4 rounded-3 text-center" style="background: rgba(0,255,136,0.06); border: 1px dashed rgba(0,255,136,0.4);">
                         <div style="font-size: 2.5rem; margin-bottom: 12px;">🔗</div>
                         <p class="fw-semibold text-main mb-1">Посилання готове!</p>
@@ -228,7 +220,6 @@
                 }
                 else
                 {
-                    <!-- NOT CONNECTED STATE -->
                     <div class="mb-4 p-4 rounded-3 text-center" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
                         <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6;">📵</div>
                         <p class="text-main fw-semibold mb-1">Telegram не прив'язано</p>
@@ -255,7 +246,6 @@
             </div>
         }
 
-        <!-- Danger / Logout Tab -->
         <div id="tab-danger" class="tab-panel glass-card p-4">
             <h6 class="fw-bold text-muted mb-4 text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.08em;">Вийти з акаунта</h6>
             <p class="text-muted mb-4" style="font-size: 0.9rem;">Ви вийдете з поточного сеансу. Щоб увійти знову, знадобиться пароль.</p>
@@ -278,7 +268,6 @@
             document.getElementById('tab-' + name)?.classList.add('active');
             event.currentTarget.classList.add('active');
         }
-        // Auto-open tab from server
         const autoTab = '@activeTab';
         if (autoTab && autoTab !== 'info') {
             document.getElementById('tab-' + autoTab)?.classList.add('active');

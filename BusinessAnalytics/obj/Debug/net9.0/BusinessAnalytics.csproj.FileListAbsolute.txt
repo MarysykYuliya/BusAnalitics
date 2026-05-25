@@ -216,3 +216,4 @@ C:\Users\maris\RiderProjects\BusinessAnalytics\BusinessAnalytics\bin\Debug\net9.
 C:\Users\maris\RiderProjects\BusinessAnalytics\BusinessAnalytics\bin\Debug\net9.0\BouncyCastle.Cryptography.dll
 C:\Users\maris\RiderProjects\BusinessAnalytics\BusinessAnalytics\bin\Debug\net9.0\MailKit.dll
 C:\Users\maris\RiderProjects\BusinessAnalytics\BusinessAnalytics\bin\Debug\net9.0\MimeKit.dll
+C:\Users\maris\RiderProjects\BusinessAnalytics\BusinessAnalytics\obj\Debug\net9.0\BusinessAnalytics.sourcelink.json

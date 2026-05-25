@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 
 namespace BusinessAnalytics.Controllers
 {
@@ -383,6 +384,91 @@ namespace BusinessAnalytics.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     TempData["ProfileSuccess"] = "🚀 Тестовий звіт успішно надіслано в Telegram!";
+                }
+                else
+                {
+                    var err = await response.Content.ReadAsStringAsync();
+                    TempData["ProfileError"] = $"Помилка відправки в Telegram: {response.StatusCode} - {err}";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ProfileError"] = $"Помилка відправки: {ex.Message}";
+            }
+
+            TempData["ProfileTab"] = "telegram";
+            return RedirectToAction("Profile");
+        }
+
+        // POST: /Account/SendTestUtilityReminder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public async Task<IActionResult> SendTestUtilityReminder()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || string.IsNullOrEmpty(user.TelegramChatId))
+            {
+                TempData["ProfileError"] = "Спочатку прив'яжіть Telegram!";
+                TempData["ProfileTab"] = "telegram";
+                return RedirectToAction("Profile");
+            }
+
+            var db = (BusinessAnalytics.Data.ApplicationDbContext)HttpContext.RequestServices.GetService(typeof(BusinessAnalytics.Data.ApplicationDbContext))!;
+            
+            var unpaidRecords = db.UtilityRecords
+                .Include(r => r.Premises)
+                    .ThenInclude(p => p.BusinessAccount)
+                .Include(r => r.UtilityType)
+                .Where(r => r.Premises.BusinessAccount.OwnerId == user.Id && !r.IsPaid)
+                .OrderBy(r => r.Premises.BusinessAccount.Name)
+                .ThenBy(r => r.Year).ThenBy(r => r.Month)
+                .ToList();
+
+            if (!unpaidRecords.Any())
+            {
+                TempData["ProfileError"] = "У вас немає неоплачених рахунків за комуналку! (Тому повідомлення і не відправляється)";
+                TempData["ProfileTab"] = "telegram";
+                return RedirectToAction("Profile");
+            }
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("*Нагадування: Неоплачені операційні витрати (ТЕСТ)*");
+            sb.AppendLine($"Користувач: {user.Email?.Replace("_", "\\_")}");
+            sb.AppendLine("━━━━━━━━━━━━━━━━━━━━━");
+
+            var groupedByBiz = unpaidRecords.GroupBy(r => r.Premises.BusinessAccount.Name);
+            var monthNames = new[] { "", "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень" };
+
+            foreach (var group in groupedByBiz)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"*{group.Key.Replace("_", "\\_").Replace("*", "\\*")}*");
+                
+                foreach (var r in group)
+                {
+                    sb.AppendLine($"- {r.Premises.Name.Replace("_", "\\_")} — {r.UtilityType.Name.Replace("_", "\\_")}");
+                    sb.AppendLine($"  Період: {monthNames[r.Month]} {r.Year} | Сума: `{r.Amount:N2} ₴`");
+                }
+            }
+
+            var totalDebt = unpaidRecords.Sum(r => r.Amount);
+            sb.AppendLine();
+            sb.AppendLine("━━━━━━━━━━━━━━━━━━━━━");
+            sb.AppendLine($"*Загальна сума до оплати:* `{totalDebt:N2} ₴`");
+            sb.AppendLine();
+            sb.AppendLine($"_Business Analytics_");
+
+            try
+            {
+                using var client = new HttpClient();
+                var url = $"https://api.telegram.org/bot{_telegramSettings.BotToken}/sendMessage";
+                var payload = new { chat_id = user.TelegramChatId, text = sb.ToString(), parse_mode = "Markdown" };
+                var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(url, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["ProfileSuccess"] = "💧 Тестове нагадування про комуналку успішно надіслано в Telegram!";
                 }
                 else
                 {

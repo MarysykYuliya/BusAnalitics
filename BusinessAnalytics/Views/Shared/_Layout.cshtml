@@ -5,23 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Business Analytics</title>
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Bootstrap -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- Custom site styles -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BusinessAnalytics.styles.css" asp-append-version="true" />
 </head>
 <body>
     <div class="app-wrapper">
         <div class="sidebar-backdrop d-lg-none" id="sidebarBackdrop"></div>
-        <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
@@ -95,16 +90,13 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="main-content" id="main-content">
-            <!-- Topbar (User menu) -->
             <header class="topbar">
                 <div class="d-flex align-items-center w-100 justify-content-between">
                     <button class="btn btn-link d-lg-none text-main" id="sidebarToggle">
                         <i class="bi bi-list fs-3" style="color: var(--neon-green);"></i>
                     </button>
                 <div class="d-flex align-items-center gap-3 ms-auto">
-                    <!-- Theme Toggle -->
                     <button id="themeToggle" onclick="toggleTheme()" title="Змінити тему"
                             style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 40px; padding: 6px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-main); font-size: 0.85rem; font-weight: 500; transition: all 0.3s;">
                         <span id="themeIcon">🌙</span>
@@ -115,7 +107,6 @@
                 </div>
             </header>
 
-            <!-- Page Content Container -->
             <div class="content-wrapper">
                 @RenderBody()
             </div>
@@ -126,7 +117,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
-        // Toggle Sidebar on mobile
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
@@ -144,12 +134,10 @@
             sidebarBackdrop.addEventListener('click', toggleSidebar);
         }
 
-        // ===== THEME TOGGLE =====
         const html = document.documentElement;
         const themeIcon = document.getElementById('themeIcon');
         const themeLabel = document.getElementById('themeLabel');
 
-        // Load saved theme
         const savedTheme = localStorage.getItem('busan-theme') || 'dark';
         applyTheme(savedTheme);
 

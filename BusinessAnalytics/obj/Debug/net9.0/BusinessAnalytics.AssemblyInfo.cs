@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BusinessAnalytics")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4c7ae2075a9c7fca0280ec16f40bbaad52c5f79e")]
 [assembly: System.Reflection.AssemblyProductAttribute("BusinessAnalytics")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BusinessAnalytics")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

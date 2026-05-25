@@ -151,7 +151,6 @@
     }
 </style>
 
-<!-- Add a wrapper to scope the dark mode safely -->
 <div class="dark-dashboard">
 
     <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
@@ -164,9 +163,7 @@
         </button>
     </div>
 
-    <!-- 🎛️ Фільтри -->
     <div class="glass-card-dark p-4 mb-4">
-        <!-- Рядок 1: Бізнеси + Метрики -->
         <div class="row g-4 mb-3">
             <div class="col-md-7">
                 <p class="fw-semibold mb-2 text-uppercase" style="font-size:0.75rem; letter-spacing:1.5px; color: var(--text-muted);">
@@ -199,7 +196,6 @@
 
         <hr style="border-color: rgba(255,255,255,0.07); margin: 0 0 1rem 0;">
 
-        <!-- Рядок 2: Дати + Кнопка -->
         <div class="d-flex align-items-center gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 140px;">
                 <span class="text-muted small fw-medium" style="white-space:nowrap;">З</span>
@@ -215,10 +211,8 @@
         </div>
     </div>
 
-    <!-- 📊 Grid Layout -->
     <div class="dashboard-grid mb-4">
         
-        <!-- 📈 1. Динаміка прибутку (Великий лінійний графік) -->
         <div class="glass-card-dark p-4 grid-full d-flex flex-column">
             <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#10b981;">●</span> Динаміка прибутку у часі</h5>
             <div class="chart-container">
@@ -226,7 +220,6 @@
             </div>
         </div>
 
-        <!-- 🕸️ 2. Радар Метрик (Radar Chart) -->
         <div class="glass-card-dark p-4 grid-one-third d-flex flex-column">
             <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#8b5cf6;">●</span> Баланс Метрик (Радар)</h5>
             <div class="chart-container chart-container-sm">
@@ -235,7 +228,6 @@
             <p class="text-muted small text-center mt-3 mb-0">Порівняння бізнесів за всіма обраними показниками.</p>
         </div>
 
-        <!-- 📊 3. Порівняння метрик (Bar Chart) -->
         <div class="glass-card-dark p-4 grid-two-thirds d-flex flex-column">
             <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#3b82f6;">●</span> Абсолютні показники</h5>
             <div class="chart-container chart-container-sm">
@@ -243,7 +235,6 @@
             </div>
         </div>
 
-        <!-- 🍩 4. Розподіл по категоріях (Doughnut) -->
         <div class="glass-card-dark p-4 grid-half d-flex flex-column">
             <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#f59e0b;">●</span> Розподіл за категоріями</h5>
             <div id="categoryChartsContainer" class="row g-3 overflow-auto" style="max-height: 400px;">
@@ -251,7 +242,6 @@
             </div>
         </div>
 
-        <!-- 🌀 5. Polar Area (Порівняння оборотів) -->
         <div class="glass-card-dark p-4 grid-half d-flex flex-column">
             <h5 class="fw-bold mb-4" style="color: var(--text-main, #f8fafc);"><span style="color:#ec4899;">●</span> Частка ринку (Оборот)</h5>
             <div class="chart-container chart-container-sm">
@@ -259,7 +249,6 @@
             </div>
         </div>
 
-        <!-- 🏆 6. Таблиця лідерів -->
         <div id="topDataContainer" class="glass-card-dark p-0 overflow-hidden grid-full">
             <div class="p-4 border-bottom border-secondary border-opacity-25">
                 <h5 class="fw-bold mb-0" style="color: var(--text-main, #f8fafc);"><i class="bi bi-trophy text-warning me-2"></i>Топ товарів та категорій</h5>
@@ -281,7 +270,6 @@
         </div>
     </div>
 
-    <!-- 💡 ШІ Поради (Premium) -->
     @if (User.IsInRole("ProUser") || true)
     {
         <div id="tipsContainer" class="glass-card-dark p-4 border border-info border-opacity-25">
@@ -295,7 +283,6 @@
                 </div>
             </div>
             <div class="row g-3" id="tipsList">
-                <!-- Поради -->
             </div>
         </div>
     }
@@ -303,11 +290,9 @@
 
 @section Scripts {
 <script>
-    // 🌌 GLOBAL DARK THEME DEFAULTS FOR CHART.JS
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.color = '#94a3b8'; // Slate 400
     
-    // Tooltips
     Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)'; // Slate 900
     Chart.defaults.plugins.tooltip.titleColor = '#f8fafc';
     Chart.defaults.plugins.tooltip.bodyColor = '#cbd5e1';
@@ -317,7 +302,6 @@
     Chart.defaults.plugins.tooltip.cornerRadius = 8;
     Chart.defaults.plugins.tooltip.displayColors = true;
 
-    // Grid lines
     Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
     Chart.defaults.scale.ticks.color = '#94a3b8';
 
@@ -327,7 +311,6 @@
     let polarInstance = null;
     let categoryCharts = {};
 
-    // 🎨 CYBERPUNK NEON COLOR PALETTE
     const neonPalette = [
         { name: 'Green', rgb: '16, 185, 129', hex: '#10b981' },
         { name: 'Blue', rgb: '59, 130, 246', hex: '#3b82f6' },
@@ -350,7 +333,6 @@
         startDateInput.value = formatDate(thirtyDaysAgo);
         endDateInput.value = formatDate(today);
 
-        // Auto load on start
         setTimeout(() => document.getElementById('loadDataBtn').click(), 200);
     });
 
@@ -389,7 +371,6 @@
             renderCategoryCharts(data.categoryDistribution);
             renderTable(data);
 
-            // Tips
             const tipsResponse = await fetch('@Url.Action("GetUserTips", "Analytics")');
             if (tipsResponse.ok) {
                 const tips = await tipsResponse.json();
@@ -403,7 +384,6 @@
         }
     });
 
-    // 1. Динаміка прибутку (Line)
     function renderLineChart(data) {
         const ctx = document.getElementById('lineChart').getContext('2d');
         const datasets = [];
@@ -451,7 +431,6 @@
         });
     }
 
-    // 2. Порівняння метрик (Bar)
     function renderBarChart(data) {
         const ctx = document.getElementById('analyticsChart').getContext('2d');
         const labels = data.businesses.map(b => b.businessName);
@@ -492,11 +471,9 @@
         });
     }
 
-    // 3. Радар Метрик (Radar)
     function renderRadarChart(data, selectedMetrics) {
         const ctx = document.getElementById('radarChart').getContext('2d');
         
-        // Normalize data so they can be compared on the same scale (0-100%)
         const maxValues = {};
         selectedMetrics.forEach(m => {
             maxValues[m] = Math.max(...data.businesses.map(b => b.metrics[m] || 0), 1); // prevent div by 0
@@ -539,7 +516,6 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                // Show original value in tooltip
                                 const metricName = context.chart.data.labels[context.dataIndex];
                                 const originalValue = data.businesses[context.datasetIndex].metrics[metricName];
                                 return `${context.dataset.label}: ${originalValue.toFixed(2)}`;
@@ -551,12 +527,10 @@
         });
     }
 
-    // 4. Частка ринку (Polar Area) - Uses first metric (e.g. Оборот or Прибуток)
     function renderPolarChart(data) {
         const ctx = document.getElementById('polarChart').getContext('2d');
         const labels = data.businesses.map(b => b.businessName);
         
-        // Grab the first metric for comparison
         const targetMetric = Object.keys(data.businesses[0].metrics)[0];
         const chartData = data.businesses.map(b => b.metrics[targetMetric] || 0);
         
@@ -593,7 +567,6 @@
         });
     }
 
-    // 5. Розподіл по категоріях (Doughnut)
     function renderCategoryCharts(categoryDistribution) {
         const container = document.getElementById('categoryChartsContainer');
         container.innerHTML = '';
@@ -650,7 +623,6 @@
         });
     }
 
-    // 6. Таблиця лідерів
     function renderTable(data) {
         const tableBody = document.getElementById('topDataBody');
         tableBody.innerHTML = '';
@@ -675,7 +647,6 @@
         });
     }
 
-    // ШІ Поради
     function renderTips(tips) {
         const list = document.getElementById('tipsList');
         list.innerHTML = '';
@@ -698,7 +669,6 @@
         });
     }
 
-    // PDF Export
     document.getElementById('savePdfBtn').addEventListener('click', async () => {
         const btn = document.getElementById('savePdfBtn');
         const originalText = btn.innerHTML;

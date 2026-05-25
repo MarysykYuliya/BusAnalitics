@@ -19,7 +19,6 @@
     </div>
 }
 
-<!-- Business selector + Month picker -->
 <div class="glass-card p-4 mb-4">
     <form method="get" class="d-flex align-items-end gap-3 flex-wrap">
         <div class="flex-grow-1">
@@ -58,13 +57,10 @@
 
 @if (selectedId.HasValue)
 {
-    <!-- Management buttons row -->
     <div class="d-flex gap-3 mb-4 flex-wrap">
-        <!-- Add Premises -->
         <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addPremisesModal">
             <i class="bi bi-plus-circle me-1"></i> Додати об'єкт / філію
         </button>
-        <!-- Add Utility Type -->
         <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#addTypeModal">
             <i class="bi bi-tags me-1"></i> Додати статтю витрат
         </button>
@@ -79,7 +75,6 @@
     }
     else if (Model.Any() && utilityTypes.Any())
     {
-        <!-- MAIN TABLE: Premises x UtilityTypes for current month -->
         <div class="glass-card p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold text-main mb-0">
@@ -175,7 +170,6 @@
     }
     else
     {
-        <!-- One of them is missing -->
         <div class="glass-card p-4 mb-4 text-center">
             <div style="font-size: 2rem; opacity: 0.5; margin-bottom: 0.5rem;">
                 @(Model.Any() ? "💡" : "🏢")
@@ -188,7 +182,6 @@
         </div>
     }
 
-    <!-- Management lists — ALWAYS visible when business selected -->
     <div class="d-flex gap-4 flex-wrap mt-4">
         <div class="glass-card p-3 flex-grow-1" style="min-width: 250px;">
             <h6 class="fw-bold text-muted small text-uppercase mb-3">🏢 Об'єкти (@Model.Count)</h6>
@@ -244,7 +237,6 @@
         </div>
     </div>
 
-    <!-- Modal: Add Premises -->
     <div class="modal fade" id="addPremisesModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" style="background: var(--space-surface); border: 1px solid var(--glass-border);">
@@ -273,7 +265,6 @@
         </div>
     </div>
 
-    <!-- Modal: Add Utility Type -->
     <div class="modal fade" id="addTypeModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" style="background: var(--space-surface); border: 1px solid var(--glass-border);">
@@ -298,7 +289,6 @@
         </div>
     </div>
 
-    <!-- Modal: Add Record -->
     <div class="modal fade" id="addRecordModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" style="background: var(--space-surface); border: 1px solid var(--glass-border);">
